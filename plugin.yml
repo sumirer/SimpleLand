@@ -1,0 +1,18 @@
+name: SimpleLand
+main: sole.memory.SimpleLand
+version: "1.0.0"
+api: 1.0.0
+load: POSTWORLD
+author: "SoleMemory"
+
+
+commands:
+ land:
+  description: "SimpleLand 地皮命令"
+  usage:
+  permission: simpleland.command
+
+permissions:
+ simpleland.command:
+  default: true
+  description: ""
