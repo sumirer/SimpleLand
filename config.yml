@@ -1,0 +1,9 @@
+---
+# simpleland地皮配置文件
+# 地皮世界名字
+landname: land
+# 地皮价格 （适配 @Him188 的经济核心）
+price: 20000
+# 地皮管理员身份
+admin: null
+...
