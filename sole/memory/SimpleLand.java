@@ -15,6 +15,8 @@ import cn.nukkit.plugin.PluginBase;
 import cn.nukkit.utils.Config;
 import cn.nukkit.utils.TextFormat;
 import money.Money;
+import sole.memory.generateWorld.ExpandLand;
+import sole.memory.generateWorld.Land;
 
 
 import java.util.*;
@@ -31,30 +33,31 @@ public class SimpleLand extends PluginBase implements Listener {
     private HashMap<String,Object> landname = new HashMap<>();
 
 
+
     @Override
     public void onEnable() {
 
         getDataFolder().mkdir();
         saveDefaultConfig();
+        saveResource("World.yml",false);
         this.getServer().getLogger().info("[SimpleLand] 地皮插件加载成功");
         Config cfg = new Config(getDataFolder() + "/config.yml", Config.YAML);
         Map<String, Object> cfgg = new Config(getDataFolder() + "/Guest.yml", Config.YAML).getAll();
         for (Map.Entry<String, Object> entry : cfgg.entrySet()) {
             guest.put(entry.getKey(),(List) entry.getValue());
         }
+        Config c = new Config(getDataFolder() + "/World.yml", Config.YAML);
         //  landinfo = new HashMap<>();
         Map<String, Object> con = new Config(getDataFolder() + "/SimpleLand.yml", Config.YAML).getAll();
         con.entrySet().stream().filter(entry -> entry.getValue() instanceof Map).forEach(entry -> {
             landinfo.put(entry.getKey(), (HashMap) entry.getValue());
         });
-        Map<String, Object> c = new Config(getDataFolder() + "/LandName.yml", Config.YAML).getAll();
-        c.entrySet().stream().filter(entry -> entry.getValue() instanceof Objects).forEach(entry -> {
+        Map<String, Object> cs = new Config(getDataFolder() + "/LandName.yml", Config.YAML).getAll();
+        cs.entrySet().stream().filter(entry -> entry.getValue() instanceof Objects).forEach(entry -> {
             landname.put(entry.getKey(),entry.getValue());
         });
-        List map = cfg.getList("landname");
-        for (Object landsds:map) {
-            String landsd = landsds.toString();
-            createWorld(landsd);
+        for (String landsds:c.getKeys()) {
+            createWorld(landsds.toString(),Integer.parseInt(c.get(landsds).toString()));
         }
         Server.getInstance().getPluginManager().registerEvents(this, this);
         this.getServer().getLogger().info("[SimpleLand] 加载成功");
@@ -62,9 +65,15 @@ public class SimpleLand extends PluginBase implements Listener {
     /**
      *创建地图
      **/
-    public void createWorld(String world){
-        Generator.addGenerator(Land.class, world, 4);
-        getServer().generateLevel(world, 2333, Land.class);
+    public void createWorld(String world ,int type){
+        if(type == 1) {
+            Generator.addGenerator(Land.class, world, 4);
+            getServer().generateLevel(world, 2333, Land.class);
+        }
+        if(type == 2) {
+            Generator.addGenerator(ExpandLand.class, world, 4);
+            getServer().generateLevel(world, 2333, ExpandLand.class);
+        }
         getServer().loadLevel(world);
         this.getServer().getLogger().info(TextFormat.AQUA+"[SimpleLand] 地皮世界"+world+"加载成功");
         getServer().getLevelByName(world).setSpawnLocation(new Vector3(0.0D, 10.0D, 0.0D));
@@ -90,11 +99,8 @@ public class SimpleLand extends PluginBase implements Listener {
         /**
          * 领地石判断
          * */
-        double f = ((double) z + 44)/48;
-        double n = ((double) x + 44)/48;
-        int q = (int) n;
-        int w = (int) f;
-        if(n == (double) q && (double) w == f){
+
+        if(isLandBlock(block,getWorldType(block))){
              String landid = x + "-" + z;
              if(isBuyLand(landid +"-"+block.getLevel().getName())){
                  event.setCancelled();
@@ -147,14 +153,14 @@ public class SimpleLand extends PluginBase implements Listener {
         cfg.setAll(con);
         cfg.save();
     }
-    public void saveName(){
+    public void saveName() {
         LinkedHashMap<String, Object> con = new LinkedHashMap<>();
         con.putAll(landname);
         Config cfg = new Config(getDataFolder() + "/LandName.yml", Config.YAML);
         cfg.setAll(con);
         cfg.save();
     }
-     //TODO: 2017.04.01 领地石判断，破坏权限检测
+
      @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
          Block block = event.getBlock();
@@ -168,17 +174,8 @@ public class SimpleLand extends PluginBase implements Listener {
          if (!isLandWord(event.getPlayer().getLevel().getName())) {
              return;
          }
-         int x = (int) block.getX();
-         int z = (int) block.getZ();
-         /**
-          * 领地石判断
-          * */
-         double f = ((double) z + 44) / 48;
-         double n = ((double) x + 44) / 48;
-         int q = (int) n;
-         int w = (int) f;
-         if (n == (double) q && (double) w == f) {
-             String id = x + "-" + z + "-" + event.getPlayer().getLevel().getName().toString();
+         if (isLandBlock(block,getWorldType(block))) {
+             String id = (int)block.x + "-" + (int)block.z + "-" + event.getPlayer().getLevel().getName().toString();
              /**
               * 权限判断
               * */
@@ -216,16 +213,51 @@ public class SimpleLand extends PluginBase implements Listener {
 
          }
      }
+
+     public int getWorldType(Block block){
+         Config c = new Config(getDataFolder() + "/World.yml", Config.YAML);
+        String id = block.getLevel().getName();
+        return Integer.parseInt(c.get(id).toString());
+     }
+
+     public boolean isLandBlock(Block block ,int type) {
+         if (type == 1) {
+             int x = (int) block.getX();
+             int z = (int) block.getZ();
+
+             double f = ((double) z + 44) / 48;
+             double n = ((double) x + 44) / 48;
+             int q = (int) n;
+             int w = (int) f;
+             if (n == (double) q && (double) w == f) {
+                 return true;
+             }
+         }
+         if (type == 2) {
+             int x = (int) block.getX();
+             int z = (int) block.getZ();
+
+             double f = ((double) z + 60) / 64;
+             double n = ((double) x + 60) / 64;
+             int q = (int) n;
+             int w = (int) f;
+             if (n == (double) q && (double) w == f) {
+                 return true;
+             }
+         }
+         return false;
+     }
       /**
        * 地皮世界判断
        * */
       public boolean isLandWord(String land){
-          Config cfg = new Config(getDataFolder() + "/config.yml", Config.YAML);
-          if(cfg.getList("landname").contains(land)){
-              return true;
-          }else {
-              return false;
+          Config c = new Config(getDataFolder() + "/World.yml", Config.YAML);
+          for (String ids:c.getKeys()){
+              if(ids.equals(land)) {
+                  return true;
+              }
           }
+          return false;
       }
      /**
       * 获取方块位置是否有地皮，并返回地皮 ID
@@ -275,13 +307,10 @@ public class SimpleLand extends PluginBase implements Listener {
             landname.put(id,name);
             saveName();
     }
-   public void addWorld(String world){
-       Config cfg = new Config(getDataFolder() + "/config.yml", Config.YAML);
-       List map = cfg.getList("landname");
-       map.add(world);
-       map.toArray();
-       cfg.set("landname",map);
-       cfg.save();
+   public void addWorld(String worldname,int type){
+       Config c = new Config(getDataFolder() + "/World.yml", Config.YAML);
+       c.set(worldname,type);
+       c.save();
    }
 
     public Vector3 getLandPoint(String id){
@@ -442,12 +471,12 @@ public class SimpleLand extends PluginBase implements Listener {
                                         sender.sendMessage(TextFormat.RED+"WARNING 你不是管理员，请勿执行此命令");
                                         return false;
                                     }else {
-                                        if (args.length > 1) {
-                                            createWorld(args[1]);
-                                            addWorld(args[1]);
+                                        if (args.length > 2) {
+                                            createWorld(args[1],Integer.parseInt(args[2]));
+                                            addWorld(args[1],Integer.parseInt(args[2]));
                                             sender.sendMessage(TextFormat.RED + "WARNING 成功创建地皮世界 " + args[1]);
                                         }else{
-                                            sender.sendMessage(TextFormat.RED + "WARNING 请输入世界名字");
+                                            sender.sendMessage(TextFormat.RED + "WARNING 请输入世界名字和世界类型<1/2>");
                                         }
                                     }
                                 }
