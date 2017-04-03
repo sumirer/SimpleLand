@@ -100,39 +100,65 @@ public class SimpleLand extends PluginBase implements Listener {
          * 领地石判断
          * */
 
-        if(isLandBlock(block,getWorldType(block))){
-             String landid = x + "-" + z;
-             if(isBuyLand(landid +"-"+block.getLevel().getName())){
-                 event.setCancelled();
-                 player.sendMessage(TextFormat.BLUE+"[SimpleLand] 此领地已经有主人了！！");
-                 return;
-             }
-           Double money = Money.getInstance().getMoney(player);
-           if(money < price){
-               player.sendMessage(TextFormat.BLUE+"[SimpleLand] 你的金币不足！！");
-           }else {
-               Double moneys = Money.getInstance().getMoney(player);
-               /**
-                * 经济核心调用 @Him188 的经济核心
-                * 默认使用第一种货币 @Money1
-                * */
-               Money.getInstance().setMoney(player,moneys - price,false);
-               /**
-                *  多地皮世界支持
-                * */
-               HashMap<String,Object> sd = new HashMap<>();
-               sd.put("ower",player.getName().toLowerCase());
-               sd.put("x1",block.x);
-               sd.put("z1",block.z);
-               sd.put("x2",block.x + 39);
-               sd.put("z2",block.z + 39);
-               sd.put("id",landid +"-"+block.getLevel().getName());
-               sd.put("world",block.getLevel().getName());
-               landinfo.put(landid +"-"+block.getLevel().getName() ,sd);
-               saveData();
-               setDefaultName(landid +"-"+block.getLevel().getName());
-               player.sendMessage(TextFormat.BLUE+"[SimpleLand] 成功购买此地皮，花费"+price+"金币");
-           }
+        if(isLandBlock(block,getWorldType(block))) {
+            String landid = x + "-" + z;
+            if (isBuyLand(landid + "-" + block.getLevel().getName())) {
+                event.setCancelled();
+                player.sendMessage(TextFormat.BLUE + "[SimpleLand] 此领地已经有主人了！！");
+                return;
+            }
+            if (getLandCount(player) == 0) {
+                HashMap<String, Object> sd = new HashMap<>();
+                sd.put("ower", player.getName().toLowerCase());
+                sd.put("x1", block.x);
+                sd.put("z1", block.z);
+                sd.put("x2", block.x + 39);
+                sd.put("z2", block.z + 39);
+                sd.put("id", landid + "-" + block.getLevel().getName());
+                sd.put("world", block.getLevel().getName());
+                landinfo.put(landid + "-" + block.getLevel().getName(), sd);
+                saveData();
+                setDefaultName(landid + "-" + block.getLevel().getName());
+                player.sendMessage(TextFormat.BLUE + "[SimpleLand] 成功领取第一块新手地皮，此地皮免费");
+                event.setCancelled();
+                return;
+            } else {
+                if(!isAdmin(player.getName().toLowerCase())) {
+                    if (getLandCount(player) >= Integer.parseInt(cfg.get("limit").toString())) {
+                        player.sendMessage(TextFormat.BLUE + "[SimpleLand] 你的地皮已经超过限制数量，无法购买");
+                        event.setCancelled();
+                        return;
+                    }
+                }
+                Double money = Money.getInstance().getMoney(player);
+                if (money < price) {
+                    player.sendMessage(TextFormat.BLUE + "[SimpleLand] 你的金币不足！！");
+                    event.setCancelled();
+                } else {
+                    Double moneys = Money.getInstance().getMoney(player);
+                    /**
+                     * 经济核心调用 @Him188 的经济核心
+                     * 默认使用第一种货币 @Money1
+                     * */
+                    Money.getInstance().setMoney(player, moneys - price, false);
+                    /**
+                     *  多地皮世界支持
+                     * */
+                    HashMap<String, Object> sd = new HashMap<>();
+                    sd.put("ower", player.getName().toLowerCase());
+                    sd.put("x1", block.x);
+                    sd.put("z1", block.z);
+                    sd.put("x2", block.x + 39);
+                    sd.put("z2", block.z + 39);
+                    sd.put("id", landid + "-" + block.getLevel().getName());
+                    sd.put("world", block.getLevel().getName());
+                    landinfo.put(landid + "-" + block.getLevel().getName(), sd);
+                    saveData();
+                    setDefaultName(landid + "-" + block.getLevel().getName());
+                    player.sendMessage(TextFormat.BLUE + "[SimpleLand] 成功购买此地皮，花费" + price + "金币");
+                    event.setCancelled();
+                }
+            }
         }
   }
 
@@ -181,10 +207,14 @@ public class SimpleLand extends PluginBase implements Listener {
               * */
              if (isBuyLand(id)) {
                  if (isOwer(player, id)) {
+                     if(getLandCount(player) ==1){
+                         player.sendMessage(TextFormat.AQUA + "[SimpleLand] 成功删除编号为" + id + "的地皮，此地皮为领取地皮，无法获得金币");
+                     }else {
+                         Money.getInstance().addMoney(player, prices / 2, false);
+                         player.sendMessage(TextFormat.AQUA + "[SimpleLand] 成功删除编号为" + id + "的地皮，售出价格为" + prices / 2);
+                     }
                      landinfo.remove(id);
                      saveData();
-                     Money.getInstance().addMoney(player, prices / 2, false);
-                     player.sendMessage(TextFormat.AQUA + "[SimpleLand] 成功删除编号为" + id + "的地皮，售出价格为" + prices / 2);
                      event.setCancelled();
                      return;
                  } else {
@@ -213,6 +243,10 @@ public class SimpleLand extends PluginBase implements Listener {
 
          }
      }
+     /**
+      * 地皮生成器类型
+      * return 1 | 2
+      * */
 
      public int getWorldType(Block block){
          Config c = new Config(getDataFolder() + "/World.yml", Config.YAML);
@@ -220,6 +254,9 @@ public class SimpleLand extends PluginBase implements Listener {
         return Integer.parseInt(c.get(id).toString());
      }
 
+     /**
+      * 领地石判断
+      * */
      public boolean isLandBlock(Block block ,int type) {
          if (type == 1) {
              int x = (int) block.getX();
@@ -247,6 +284,21 @@ public class SimpleLand extends PluginBase implements Listener {
          }
          return false;
      }
+
+     /**
+      * 获取玩家地皮数量
+      * */
+     public int getLandCount(Player player){
+         int i = 0;
+         for (HashMap map:landinfo.values()) {
+             if(map.get("ower").equals(player.getName().toLowerCase())){
+                 i++;
+             }
+         }
+         return i;
+     }
+
+
       /**
        * 地皮世界判断
        * */
@@ -459,10 +511,10 @@ public class SimpleLand extends PluginBase implements Listener {
                                 sender.sendMessage(TextFormat.YELLOW + " /land givland <玩家> " + TextFormat.AQUA + "把地皮给一个玩家，管理员无视权限");
                                 sender.sendMessage(TextFormat.YELLOW + " /land setname <名字> " + TextFormat.AQUA + "更改地皮名字");
                                 if(sender.isPlayer() && sender.isOp()) {
-                                    sender.sendMessage(TextFormat.YELLOW + " /land add <名字> " + TextFormat.AQUA + "创建一个新的地皮世界");
+                                    sender.sendMessage(TextFormat.YELLOW + " /land add <名字> <1|2>" + TextFormat.AQUA + "创建一个新的地皮世界");
                                 }
                                 if(!sender.isPlayer()){
-                                    sender.sendMessage(TextFormat.YELLOW + " /land add <名字> " + TextFormat.AQUA + "创建一个新的地皮世界");
+                                    sender.sendMessage(TextFormat.YELLOW + " /land add <名字> <1|2>" + TextFormat.AQUA + "创建一个新的地皮世界");
                                 }
                                 break;
                             case "add":
@@ -476,7 +528,7 @@ public class SimpleLand extends PluginBase implements Listener {
                                             addWorld(args[1],Integer.parseInt(args[2]));
                                             sender.sendMessage(TextFormat.RED + "WARNING 成功创建地皮世界 " + args[1]);
                                         }else{
-                                            sender.sendMessage(TextFormat.RED + "WARNING 请输入世界名字和世界类型<1/2>");
+                                            sender.sendMessage(TextFormat.RED + "WARNING 请输入世界名字和世界类型 <1|2>");
                                         }
                                     }
                                 }
