@@ -15,6 +15,7 @@ import cn.nukkit.plugin.PluginBase;
 import cn.nukkit.utils.Config;
 import cn.nukkit.utils.TextFormat;
 import money.Money;
+import sole.memory.ChangeWorld.ChangeLand;
 import sole.memory.generateWorld.ExpandLand;
 import sole.memory.generateWorld.Land;
 
@@ -110,10 +111,16 @@ public class SimpleLand extends PluginBase implements Listener {
             if (getLandCount(player) == 0) {
                 HashMap<String, Object> sd = new HashMap<>();
                 sd.put("ower", player.getName().toLowerCase());
-                sd.put("x1", block.x);
-                sd.put("z1", block.z);
-                sd.put("x2", block.x + 39);
-                sd.put("z2", block.z + 39);
+                sd.put("x1", (int)block.x);
+                sd.put("z1", (int)block.z);
+                if (getWorldType(block)==1) {
+                    sd.put("x2", (int) block.x + 39);
+                    sd.put("z2", (int) block.z + 39);
+                }
+                if (getWorldType(block)==1) {
+                    sd.put("x2", (int) block.x + 55);
+                    sd.put("z2", (int) block.z + 55);
+                }
                 sd.put("id", landid + "-" + block.getLevel().getName());
                 sd.put("world", block.getLevel().getName());
                 landinfo.put(landid + "-" + block.getLevel().getName(), sd);
@@ -146,10 +153,16 @@ public class SimpleLand extends PluginBase implements Listener {
                      * */
                     HashMap<String, Object> sd = new HashMap<>();
                     sd.put("ower", player.getName().toLowerCase());
-                    sd.put("x1", block.x);
-                    sd.put("z1", block.z);
-                    sd.put("x2", block.x + 39);
-                    sd.put("z2", block.z + 39);
+                    sd.put("x1",(int)block.x);
+                    sd.put("z1",(int) block.z);
+                    if (getWorldType(block)==1) {
+                        sd.put("x2", (int) block.x + 39);
+                        sd.put("z2", (int) block.z + 39);
+                    }
+                    if (getWorldType(block)==1) {
+                        sd.put("x2", (int) block.x + 55);
+                        sd.put("z2", (int) block.z + 55);
+                    }
                     sd.put("id", landid + "-" + block.getLevel().getName());
                     sd.put("world", block.getLevel().getName());
                     landinfo.put(landid + "-" + block.getLevel().getName(), sd);
@@ -158,7 +171,22 @@ public class SimpleLand extends PluginBase implements Listener {
                     player.sendMessage(TextFormat.BLUE + "[SimpleLand] 成功购买此地皮，花费" + price + "金币");
                     event.setCancelled();
                 }
+                event.setCancelled();
+                return;
             }
+        } if (!isAdmin(player.getName().toLowerCase())) {
+            String ids = getID(block);
+            if (ids == null) {
+                event.setCancelled();
+                return;
+            }
+            if (!isOwer(player, ids))
+                if (!isGuest(player.getName().toLowerCase(), ids)) {
+                    player.sendTip(TextFormat.RED + "你没有权限");
+                    event.setCancelled();
+                    return;
+                }
+
         }
   }
 
@@ -213,6 +241,19 @@ public class SimpleLand extends PluginBase implements Listener {
                          Money.getInstance().addMoney(player, prices / 2, false);
                          player.sendMessage(TextFormat.AQUA + "[SimpleLand] 成功删除编号为" + id + "的地皮，售出价格为" + prices / 2);
                      }
+                     ChangeLand s = new ChangeLand();
+                     s.level=block.getLevel().getName();
+                     s.x1 = block.x;
+                     s.z1 = block.z;
+                     if (getWorldType(block) ==1) {
+                         s.x2 = s.x1 + 39;
+                         s.z2 = s.z1 + 39;
+                     }
+                     if (getWorldType(block) ==2) {
+                         s.x2 = s.x1 + 55;
+                         s.z2 = s.z1 + 55;
+                     }
+                     s.setLandChunk();
                      landinfo.remove(id);
                      saveData();
                      event.setCancelled();
@@ -521,7 +562,7 @@ public class SimpleLand extends PluginBase implements Listener {
                                 if(sender.isPlayer()){
                                     if(!isAdmin(player.getName().toLowerCase())){
                                         sender.sendMessage(TextFormat.RED+"WARNING 你不是管理员，请勿执行此命令");
-                                        return false;
+                                        return true;
                                     }else {
                                         if (args.length > 2) {
                                             createWorld(args[1],Integer.parseInt(args[2]));
@@ -536,13 +577,13 @@ public class SimpleLand extends PluginBase implements Listener {
                             case "admin":
                                 if (sender.isPlayer()) {
                                     sender.sendMessage(TextFormat.RED + "[SimpleLand] 请在后台运行此命令");
-                                    return false;
+                                    return true;
                                 }
                                 if (args.length > 2) {
                                     if (args[1].equals("add")) {
                                         if (isAdmin(args[2])) {
                                             sender.sendMessage(TextFormat.RED + "[SimpleLand] " + args[2] + "已经是管理员了，无法再次添加");
-                                            return false;
+                                            return true;
                                         }
                                         addAdmin(args[2]);
                                         sender.sendMessage(TextFormat.RED + "[SimpleLand] " + args[2] + "成功添加" + args[2] + "为管理员");
@@ -551,7 +592,7 @@ public class SimpleLand extends PluginBase implements Listener {
                                         if (isAdmin(args[2])) {
                                             delAdmin(args[2]);
                                             sender.sendMessage(TextFormat.RED + "[SimpleLand] " + args[2] + "已经删除" + args[2] + "的管理员身份");
-                                            return false;
+                                            return true;
                                         } else {
                                             sender.sendMessage(TextFormat.RED + "[SimpleLand] " + args[2] + "不是管理员，无法删除");
                                             return true;
@@ -564,7 +605,7 @@ public class SimpleLand extends PluginBase implements Listener {
                             case  "guset":
                                 if (!sender.isPlayer()) {
                                     sender.sendMessage(TextFormat.RED + "[SimpleLand] 请在游戏中运行此命令");
-                                    return false;
+                                    return true;
                                 }
                                 if(args.length > 1){
                                     if (isLandWord(player.getLevel().getName())) {
@@ -593,14 +634,14 @@ public class SimpleLand extends PluginBase implements Listener {
                             case "myland":
                                 if (!sender.isPlayer()) {
                                     sender.sendMessage(TextFormat.RED + "[SimpleLand] 请在游戏中运行此命令");
-                                    return false;
+                                    return true;
                                 }
                                 showAllLandName(player);
                                 break;
                             case "giveland":
                                 if (!sender.isPlayer()) {
                                     sender.sendMessage(TextFormat.RED + "[SimpleLand] 请在游戏中运行此命令");
-                                    return false;
+                                    return true;
                                 }
                                 if(args.length > 1){
                                     if (isLandWord(player.getLevel().getName())) {
@@ -631,7 +672,7 @@ public class SimpleLand extends PluginBase implements Listener {
                             case  "setname":
                                 if (!sender.isPlayer()) {
                                     sender.sendMessage(TextFormat.RED + "[SimpleLand] 请在游戏中运行此命令");
-                                    return false;
+                                    return true;
                                 }
                                 if(args.length > 1){
                                     if (isLandWord(player.getLevel().getName())) {
@@ -655,7 +696,7 @@ public class SimpleLand extends PluginBase implements Listener {
                             case "tp":
                                 if (!sender.isPlayer()) {
                                     sender.sendMessage(TextFormat.RED + "[SimpleLand] 请在游戏中运行此命令");
-                                    return false;
+                                    return true;
                                 }
                                 if(args.length > 1){
                                    if(getLandIDbyName(args[1]) !=null){
