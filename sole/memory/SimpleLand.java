@@ -189,6 +189,16 @@ public class SimpleLand extends PluginBase implements Listener {
 
         }
   }
+   
+    /**
+    * 地皮世界取消爆炸事件
+    * */
+        @EventHandler
+        public void EntityExplodeEvent(EntityExplodeEvent tnt) {
+            if (isLandWord(tnt.getEntity().getLevel().getName())) {
+                tnt.setCancelled();
+            }
+        }
 
   /**
    *  saveData
