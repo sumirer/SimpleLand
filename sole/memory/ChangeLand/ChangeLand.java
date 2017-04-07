@@ -25,8 +25,8 @@ public final  class ChangeLand{
 
        for (double xs=x1+1 ; xs<x2;xs++){
            for (double zx=z1+1;zx<z2;zx++ ){
-               for (int ys=0; ys < 20;ys++){
-                    if( ys > 0 && ys <100){
+               for (int ys=0; ys < 128;ys++){
+                    if( ys > 0 && ys <10){
                         leve.setBlockIdAt((int)xs,ys,(int)zx, Block.GRASS);
                    }else{
                         leve.setBlockIdAt((int)xs,ys,(int)zx, Block.AIR);
