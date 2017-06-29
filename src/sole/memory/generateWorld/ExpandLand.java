@@ -3,7 +3,6 @@ package sole.memory.generateWorld;
 
 import cn.nukkit.block.Block;
 import cn.nukkit.level.ChunkManager;
-import cn.nukkit.level.format.FullChunk;
 import cn.nukkit.level.format.generic.BaseFullChunk;
 import cn.nukkit.level.generator.Generator;
 import cn.nukkit.level.generator.object.ore.OreType;
@@ -18,7 +17,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Created by Administrator on 2017/3/30.
+ * Created by SoleMemory
+ * on 2017/3/30.
  */
 public class ExpandLand extends Generator {
 
@@ -70,6 +70,8 @@ public class ExpandLand extends Generator {
         this.random = random;
     }
 
+
+    public static HashMap<String,String> BLOCK = new HashMap<>();
 
     @Override
     public void populateChunk(int chunkX, int chunkZ) {
