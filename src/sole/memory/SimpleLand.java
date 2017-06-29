@@ -70,12 +70,12 @@ public class SimpleLand extends PluginBase {
 
         getDataFolder().mkdir();
         saveDefaultConfig();
-        saveResource("World.yml",false);
+        saveResource("resources/World.yml",false);
         this.getServer().getLogger().info("[SimpleLand] 地皮插件加载成功");
         //Config cfg = new Config(getDataFolder() + "/config.yml", Config.YAML);
         initData();
         initGenerateBlock();
-        Config c = new Config(getDataFolder() + "/World.yml", Config.YAML);
+        Config c = new Config(getDataFolder() + "/resources/World.yml", Config.YAML);
         for (String landsds:c.getKeys()) {
             createWorld(landsds,Integer.parseInt(c.get(landsds).toString()));
         }
@@ -126,8 +126,8 @@ public class SimpleLand extends PluginBase {
     }
 
     private void initGenerateBlock(){
-        saveResource("worldblock.yml");
-        Map<String,Object> c = new Config(getDataFolder()+"/worldblock.yml",Config.YAML).getAll();
+        saveResource("resources/worldblock.yml");
+        Map<String,Object> c = new Config(getDataFolder()+ "/resources/worldblock.yml",Config.YAML).getAll();
         for (Map.Entry k:c.entrySet()) {
             ExpandLand.BLOCK.put(k.getKey().toString(),k.getValue().toString());
         }
@@ -135,7 +135,7 @@ public class SimpleLand extends PluginBase {
     }
     @Override
     public void onDisable() {
-        Config c = new Config(getDataFolder() + "/World.yml", Config.YAML);
+        Config c = new Config(getDataFolder() + "/resources/World.yml", Config.YAML);
         for (String landsds:c.getKeys()) {
             getServer().getLevelByName(landsds).unload();
             getServer().getLogger().info("[SimpleLand] 地皮"+landsds+" 保护卸载成功");
@@ -162,7 +162,7 @@ public class SimpleLand extends PluginBase {
 
     @Override
     public void onLoad() {
-        Config c = new Config(getDataFolder() + "/World.yml", Config.YAML);
+        Config c = new Config(getDataFolder() + "/resources/World.yml", Config.YAML);
         for (String landsds:c.getKeys()) {
             createWorld(landsds,c.getInt(landsds));
             this.getServer().getLogger().info(TextFormat.AQUA+"[SimpleLand] 地皮世界"+landsds+"加载成功");
@@ -197,7 +197,7 @@ public class SimpleLand extends PluginBase {
 
 
      protected int getWorldType(Block block){
-         Config c = new Config(getDataFolder() + "/World.yml", Config.YAML);
+         Config c = new Config(getDataFolder() + "/resources/World.yml", Config.YAML);
         String id = block.getLevel().getFolderName();
         return Integer.parseInt(c.get(id).toString());
      }
@@ -260,7 +260,7 @@ public class SimpleLand extends PluginBase {
 
 
       public boolean isLandWord(String land){
-          Config c = new Config(getDataFolder() + "/World.yml", Config.YAML);
+          Config c = new Config(getDataFolder() + "/resources/World.yml", Config.YAML);
           return c.exists(land);
       }
 
@@ -270,7 +270,7 @@ public class SimpleLand extends PluginBase {
             map.setName(name);
     }
    public void addWorld(String worldname, int type){
-       Config c = new Config(getDataFolder() + "/World.yml", Config.YAML);
+       Config c = new Config(getDataFolder() + "/resources/World.yml", Config.YAML);
        c.set(worldname,type);
        c.save();
    }
@@ -414,7 +414,7 @@ public class SimpleLand extends PluginBase {
 
 
     public void addAdmin(String player){
-        Config cfg = new Config(getDataFolder() + "/config.yml", Config.YAML);
+        Config cfg = new Config(getDataFolder() + "/resources/config.yml", Config.YAML);
         List<String> map = cfg.getStringList("admin");
         map.add(player.toLowerCase());
         map.toArray();
@@ -425,7 +425,7 @@ public class SimpleLand extends PluginBase {
 
 
     public void delAdmin(String player){
-        Config cfg = new Config(getDataFolder() + "/config.yml", Config.YAML);
+        Config cfg = new Config(getDataFolder() + "/resources/config.yml", Config.YAML);
         List map = cfg.getList("admin");
         map.remove(player.toLowerCase());
         map.toArray();
@@ -434,7 +434,7 @@ public class SimpleLand extends PluginBase {
     }
 
     protected boolean isAdmin(String player){
-        Config cfg = new Config(getDataFolder() + "/config.yml", Config.YAML);
+        Config cfg = new Config(getDataFolder() + "/resources/config.yml", Config.YAML);
         List map = cfg.getList("admin");
         return map.contains(player.toLowerCase());
     }
