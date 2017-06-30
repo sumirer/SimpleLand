@@ -120,7 +120,7 @@ public class ListenerEvent extends SimpleLand implements Listener {
     public void PlayerInteract(PlayerInteractEvent event){
         Player player = event.getPlayer();
         Block block = event.getBlock();
-        float price = Float.valueOf(getConfig().getString("price"));
+        float price = Float.valueOf(land.getConfig().getString("price","20000"));
         if(!isLandWord(event.getPlayer().getLevel().getName())){
             return;
         }

@@ -25,11 +25,6 @@ import java.util.Map;
  */
 public class SimpleLand extends PluginBase {
 
-   private HashMap<String, HashMap<String, Object>> landinfo = new HashMap<>();
-
-   private HashMap<String, List<String>> guest = new HashMap<>();
-
-    private HashMap<String,Object> landname = new HashMap<>();
 
     private HashMap<String,HashMap<String,LandInfo>> owner_list = new HashMap<>();
     private HashMap<String,HashMap<String,GuestInfo>> guest_list = new HashMap<>();
@@ -70,12 +65,13 @@ public class SimpleLand extends PluginBase {
 
         getDataFolder().mkdir();
         saveDefaultConfig();
-        saveResource("resources/World.yml",false);
+        saveResource("World.yml");
+        saveResource("worldblock.yml");
         this.getServer().getLogger().info("[SimpleLand] 地皮插件加载成功");
         //Config cfg = new Config(getDataFolder() + "/config.yml", Config.YAML);
         initData();
-        initGenerateBlock();
-        Config c = new Config(getDataFolder() + "/resources/World.yml", Config.YAML);
+        //initGenerateBlock();
+        Config c = new Config(getDataFolder()+"/World.yml",Config.YAML);
         for (String landsds:c.getKeys()) {
             createWorld(landsds,Integer.parseInt(c.get(landsds).toString()));
         }
@@ -104,7 +100,7 @@ public class SimpleLand extends PluginBase {
             });
             guest_list.put(name.getKey(),ns);
         });
-        Map<String, Object> cfga = new Config(getDataFolder() + "/SimpleLand.yml", Config.YAML).getAll();
+        Map<String, Object> cfga = new Config(getDataFolder() + "/Land.yml", Config.YAML).getAll();
         cfga.entrySet().forEach((name)->{
             @SuppressWarnings("unchecked")
             HashMap<String,HashMap<String,Object>> s = (HashMap) name.getValue();
@@ -126,8 +122,8 @@ public class SimpleLand extends PluginBase {
     }
 
     private void initGenerateBlock(){
-        saveResource("resources/worldblock.yml");
-        Map<String,Object> c = new Config(getDataFolder()+ "/resources/worldblock.yml",Config.YAML).getAll();
+        saveResource("worldblock.yml");
+        Map<String,Object> c = new Config(getDataFolder()+ "/worldblock.yml",Config.YAML).getAll();
         for (Map.Entry k:c.entrySet()) {
             ExpandLand.BLOCK.put(k.getKey().toString(),k.getValue().toString());
         }
@@ -135,16 +131,14 @@ public class SimpleLand extends PluginBase {
     }
     @Override
     public void onDisable() {
-        Config c = new Config(getDataFolder() + "/resources/World.yml", Config.YAML);
+        Config c = new Config(getDataFolder() + "/World.yml", Config.YAML);
         for (String landsds:c.getKeys()) {
             getServer().getLevelByName(landsds).unload();
             getServer().getLogger().info("[SimpleLand] 地皮"+landsds+" 保护卸载成功");
         }
     }
 
-    /**
-     *创建地图
-     **/
+
     public void createWorld(String world, int type){
         if(type == 1) {
             Generator.addGenerator(Land.class, world, 4);
@@ -162,7 +156,7 @@ public class SimpleLand extends PluginBase {
 
     @Override
     public void onLoad() {
-        Config c = new Config(getDataFolder() + "/resources/World.yml", Config.YAML);
+        Config c = new Config(getDataFolder() + "/World.yml", Config.YAML);
         for (String landsds:c.getKeys()) {
             createWorld(landsds,c.getInt(landsds));
             this.getServer().getLogger().info(TextFormat.AQUA+"[SimpleLand] 地皮世界"+landsds+"加载成功");
@@ -170,34 +164,56 @@ public class SimpleLand extends PluginBase {
     }
 
 
-  /**
-   *  saveData
-   * */
-    public void saveData(){
-       LinkedHashMap<String, Object> con = new LinkedHashMap<>();
-       con.putAll(landinfo);
-       Config cfg = new Config(getDataFolder() + "/SimpleLand.yml", Config.YAML);
-       cfg.setAll(con);
-       cfg.save();
-     }
-    public void saveGuest(){
+    private void saveLandData(){
+       // HashMap<String,HashMap<String,HashMap<String,Object>>> maps = new HashMap<>();
         LinkedHashMap<String, Object> con = new LinkedHashMap<>();
-        con.putAll(guest);
-        Config cfg = new Config(getDataFolder() + "/Guest.yml", Config.YAML);
+       owner_list.forEach((name,hash)->{
+           HashMap<String,HashMap<String,Object>> map = new HashMap<>();
+           hash.forEach((id,info)->{
+               HashMap<String,Object> is = new HashMap<>();
+               is.put("id",info.getId());
+               is.put("x1",info.getX1());
+               is.put("x2",info.getX2());
+               is.put("z1",info.getZ1());
+               is.put("z2",info.getZ2());
+               is.put("name",info.getName());
+               is.put("level",info.getLevel());
+               is.put("owner",info.getOwner());
+               map.put(id,is);
+           });
+           con.put(name,map);
+       });
+        Config cfg = new Config(getDataFolder() + "/Land.yml", Config.YAML);
         cfg.setAll(con);
         cfg.save();
-    }
-    public void saveName() {
+     }
+    private void saveGuestData(){
         LinkedHashMap<String, Object> con = new LinkedHashMap<>();
-        con.putAll(landname);
-        Config cfg = new Config(getDataFolder() + "/LandName.yml", Config.YAML);
+        guest_list.forEach((name,hash)->{
+            HashMap<String,HashMap<String,Object>> map = new HashMap<>();
+            hash.forEach((id,info)->{
+                HashMap<String,Object> is = new HashMap<>();
+                is.put("id",info.getId());
+                is.put("x1",info.getX1());
+                is.put("x2",info.getX2());
+                is.put("z1",info.getZ1());
+                is.put("z2",info.getZ2());
+                is.put("owner",info.getOwer());
+                is.put("break",info.canbreak);
+                is.put("join",info.canjoin);
+                is.put("place",info.canplace);
+                map.put(id,is);
+            });
+            con.put(name,map);
+        });
+        Config cfg = new Config(getDataFolder() + "/Guest.yml", Config.YAML);
         cfg.setAll(con);
         cfg.save();
     }
 
 
      protected int getWorldType(Block block){
-         Config c = new Config(getDataFolder() + "/resources/World.yml", Config.YAML);
+         Config c = new Config(getDataFolder() + "/World.yml", Config.YAML);
         String id = block.getLevel().getFolderName();
         return Integer.parseInt(c.get(id).toString());
      }
@@ -207,16 +223,15 @@ public class SimpleLand extends PluginBase {
      }
 
 
-     protected void removeLand(Player player, Block block){
-         String id = (int)block.x + "-" + (int)block.z + "-" + block.getLevel().getFolderName();
-         if (owner_list.get(player.getName().toLowerCase()).size()==1){
+     protected void removeLand(Player player, Block block) {
+         String id = (int) block.x + "-" + (int) block.z + "-" + block.getLevel().getFolderName();
+         if (owner_list.get(player.getName().toLowerCase()).size() == 1) {
              owner_list.remove(player.getName().toLowerCase());
-             //TODO:sava
+             saveLandData();
              return;
          }
          owner_list.get(player.getName().toLowerCase()).remove(id);
-
-         //TODO:sava
+         saveLandData();
      }
 
      protected boolean isLandBlock(Block block, int type) {
@@ -260,7 +275,7 @@ public class SimpleLand extends PluginBase {
 
 
       public boolean isLandWord(String land){
-          Config c = new Config(getDataFolder() + "/resources/World.yml", Config.YAML);
+          Config c = new Config(getDataFolder() + "/World.yml", Config.YAML);
           return c.exists(land);
       }
 
@@ -270,7 +285,7 @@ public class SimpleLand extends PluginBase {
             map.setName(name);
     }
    public void addWorld(String worldname, int type){
-       Config c = new Config(getDataFolder() + "/resources/World.yml", Config.YAML);
+       Config c = new Config(getDataFolder() + "/World.yml", Config.YAML);
        c.set(worldname,type);
        c.save();
    }
@@ -336,7 +351,7 @@ public class SimpleLand extends PluginBase {
         HashMap<String,GuestInfo> n = new HashMap<>();
         n.put(landInfo.getId(),info);
         guest_list.put(landInfo.getId(),n);
-        //TODO:要添加保存
+        saveGuestData();
     }
 
     public boolean setLandOwnerChange(Player owner,String player,LandInfo landInfo){
@@ -346,14 +361,13 @@ public class SimpleLand extends PluginBase {
             HashMap<String,LandInfo> map = new HashMap<>();
             map.put(landInfo.getId(),landInfo);
            owner_list.put(player.toLowerCase(),map);
-           //TODO:savaData
         }else {
             HashMap<String,LandInfo> map = owner_list.get(player.toLowerCase());
             map.put(landInfo.getId(),landInfo);
             owner_list.put(player.toLowerCase(),map);
-            //TODO:savaData
         }
         owner_list.get(owner.getName().toLowerCase()).remove(landInfo.getId());
+        saveLandData();
         return true;
     }
     public void showAllLandName(Player player){
@@ -394,7 +408,7 @@ public class SimpleLand extends PluginBase {
             n.put(info.getId(), info);
             owner_list.put(player.getName().toLowerCase(), n);
         }
-        //TODO:SAVA
+        saveLandData();
     }
     private String setDefaultName(Player player) {
         if (!owner_list.containsKey(player.getName().toLowerCase())) return "地皮0";
