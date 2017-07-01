@@ -14,7 +14,7 @@ public class LandInfo {
     public int z2 = 0;
     public String name = null;
     public String id = null;
-    public String level;
+    public String level = null;
 
     public int getX1() {
         return x1;

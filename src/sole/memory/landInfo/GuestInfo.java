@@ -13,7 +13,7 @@ public class GuestInfo {
     public boolean canbreak;
     public boolean canplace;
     public boolean canjoin;
-    public String id;
+    public String id = null;
 
 
     public int getX1() {
