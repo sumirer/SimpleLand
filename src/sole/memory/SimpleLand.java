@@ -16,6 +16,7 @@ import sole.memory.landInfo.GuestInfo;
 import sole.memory.landInfo.LandInfo;
 import sole.memory.listenerEvent.ListenerEvent;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -30,6 +31,7 @@ public class SimpleLand extends PluginBase implements Listener {
 
     private HashMap<String,HashMap<String,LandInfo>> owner_list = new HashMap<>();
     private HashMap<String,HashMap<String,GuestInfo>> guest_list = new HashMap<>();
+    private HashMap<String,HashMap> olddata = new HashMap<>();
 
 /*
 * name:
@@ -64,6 +66,7 @@ public class SimpleLand extends PluginBase implements Listener {
 
     @Override
     public void onLoad() {
+        initGenerateBlock();
         createWorld();
     }
 
@@ -71,20 +74,69 @@ public class SimpleLand extends PluginBase implements Listener {
     public void onEnable() {
 
         getDataFolder().mkdir();
+        if (haveOldDate()){
+            changeOldData();
+            delOldData();
+        }
         saveDefaultConfig();
         saveResource("worldblock.yml");
         this.getServer().getLogger().info("[SimpleLand] 地皮插件加载成功");
-        //Config cfg = new Config(getDataFolder() + "/config.yml", Config.YAML);
         initData();
-        //initGenerateBlock();
         WorldCheck();
         Server.getInstance().getPluginManager().registerEvents(new ListenerEvent(this), this);
 
         this.getServer().getLogger().info("[SimpleLand] 加载成功");
     }
 
+    private boolean haveOldDate(){
+        File file = new File(getDataFolder()+"/SimpleLand.yml");
+        File file1 = new File(getDataFolder()+"/LandName.yml");
+        File file2 = new File(getDataFolder()+"/Guest.yml");
+        return file.exists()||file1.exists()||file2.exists();
+    }
+    private void changeOldData(){
+        Map<String,Object> config = new Config(getDataFolder()+"/SimpleLand.yml",Config.YAML).getAll();
+        for (Map.Entry info:config.entrySet()) {
+            HashMap map = (HashMap) info.getValue();
+            LandInfo mn = new LandInfo();
+            mn.x1 = Integer.valueOf(map.get("x1").toString());
+            mn.z1 = Integer.valueOf(map.get("z1").toString());
+            mn.x2 = Integer.valueOf(map.get("x2").toString());
+            mn.z2 = Integer.valueOf(map.get("z2").toString());
+            mn.owner = map.get("ower").toString();
+            mn.level = map.get("world").toString();
+            mn.id = map.get("id").toString();
+            mn.name = setDefaultName(mn.owner);
+            HashMap<String, LandInfo> map1;
+            if (owner_list.containsKey(mn.owner)) {
+                 map1 = owner_list.get(mn.owner);
+            }else {
+                map1 = new HashMap<>();
+            }
+            map1.put(mn.id,mn);
+            owner_list.put(mn.owner,map1);
+        }
+        initData();
+        saveLandData();
+        Server.getInstance().getLogger().info(TextFormat.AQUA+"数据转换成功");
+    }
+    private void delOldData(){
+        File file=new File(getDataFolder()+"/SimpleLand.yml");
+        if (file.exists()){
+            file.delete();
+        }
+        File file1 = new File(getDataFolder()+"/LandName.yml");
+        if (file1.exists()){
+            file1.delete();
+        }
+        File file2 = new File(getDataFolder()+"/Guest.yml");
+        if (file2.exists()){
+            file2.delete();
+        }
+        Server.getInstance().getLogger().info(TextFormat.AQUA+"旧数据清理成功");
+    }
     private void initData(){
-        Map<String, Object> cfgg = new Config(getDataFolder() + "/Guest.yml", Config.YAML).getAll();
+        Map<String, Object> cfgg = new Config(getDataFolder() + "/SimpleGuest.yml", Config.YAML).getAll();
         cfgg.entrySet().forEach((name)->{
             @SuppressWarnings("unchecked")
             HashMap<String,HashMap<String,Object>> s = (HashMap) name.getValue();
@@ -144,7 +196,7 @@ public class SimpleLand extends PluginBase implements Listener {
 
 
     private void createWorld(){
-        saveResource("woeldconfig.yml");
+        saveResource("worldconfig.yml");
         Config c = new Config(getDataFolder()+ "/worldconfig.yml",Config.YAML);
         for (String landsds:c.getKeys()) {
             if (c.getInt(landsds)==1) {
@@ -217,7 +269,7 @@ public class SimpleLand extends PluginBase implements Listener {
             });
             con.put(name,map);
         });
-        Config cfg = new Config(getDataFolder() + "/Guest.yml", Config.YAML);
+        Config cfg = new Config(getDataFolder() + "/SimpleGuest.yml", Config.YAML);
         cfg.setAll(con);
         cfg.save();
     }
@@ -430,6 +482,10 @@ public class SimpleLand extends PluginBase implements Listener {
         if (!owner_list.containsKey(player.getName().toLowerCase())) return "地皮0";
         return "地皮"+owner_list.get(player.getName().toLowerCase()).size();
     }
+    private String setDefaultName(String player) {
+        if (!owner_list.containsKey(player.toLowerCase())) return "地皮0";
+        return "地皮"+owner_list.get(player.toLowerCase()).size();
+    }
 
 
     private void delGuest(Player owner, String player, String id){
@@ -444,28 +500,25 @@ public class SimpleLand extends PluginBase implements Listener {
 
 
     private void addAdmin(String player){
-        Config cfg = new Config(getDataFolder() + "/resources/config.yml", Config.YAML);
-        List<String> map = cfg.getStringList("admin");
+        List<String> map = getConfig().getStringList("admin");
         map.add(player.toLowerCase());
         map.toArray();
-        cfg.set("admin",map);
-        cfg.save();
+        getConfig().set("admin",map);
+        getConfig().save();
     }
 
 
 
     private void delAdmin(String player){
-        Config cfg = new Config(getDataFolder() + "/resources/config.yml", Config.YAML);
-        List map = cfg.getList("admin");
+        List map = getConfig().getList("admin");
         map.remove(player.toLowerCase());
         map.toArray();
-        cfg.set("admin",map);
-        cfg.save();
+        getConfig().set("admin",map);
+        getConfig().save();
     }
 
     public boolean isAdmin(String player) {
-        Config cfg = new Config(getDataFolder() + "/resources/config.yml", Config.YAML);
-        List<String> map = cfg.getStringList("admin");
+        List map = getConfig().getStringList("admin");
         return map.toArray().length > 0 && map.contains(player.toLowerCase());
     }
 
@@ -499,6 +552,16 @@ public class SimpleLand extends PluginBase implements Listener {
         return null;
     }
 
+    private HashMap<String,LandInfo> getPlayerAllLand(String player){
+        if (!owner_list.containsKey(player.toLowerCase())) return null;
+        HashMap<String,LandInfo> map = new HashMap<>();
+        int i=1;
+        for (LandInfo info:owner_list.get(player.toLowerCase()).values()) {
+            map.put(i+"",info);
+            i++;
+        }
+        return map;
+    }
     public boolean isBuyLand(String id) {
         for (HashMap<String,LandInfo> map:owner_list.values()) {
             if (map.containsKey(id)){
@@ -521,8 +584,10 @@ public class SimpleLand extends PluginBase implements Listener {
                             sender.sendMessage(TextFormat.YELLOW + " /land guest <玩家> " + TextFormat.AQUA + "添加访客，给玩家破坏你的地皮授权");
                             sender.sendMessage(TextFormat.YELLOW + " /land myland " + TextFormat.AQUA + "我的地皮列表");
                             sender.sendMessage(TextFormat.YELLOW + " /land tp <地皮名字> " + TextFormat.AQUA + "tp到地皮名字为<地皮名字>的地皮");
+                            sender.sendMessage(TextFormat.YELLOW + " /land tp <玩家> <地皮名字> " + TextFormat.AQUA + "管理员tp到<玩家>地皮名字为<地皮名字>的地皮");
                             sender.sendMessage(TextFormat.YELLOW + " /land givland <玩家> " + TextFormat.AQUA + "把地皮给一个玩家，管理员无视权限");
                             sender.sendMessage(TextFormat.YELLOW + " /land setname <名字> " + TextFormat.AQUA + "更改地皮名字");
+                            sender.sendMessage(TextFormat.YELLOW + " /land land <玩家> " + TextFormat.AQUA + "查询此玩家的地皮");
                             if(sender.isPlayer() && sender.isOp()) {
                                 sender.sendMessage(TextFormat.YELLOW + " /land add <名字> <1|2>" + TextFormat.AQUA + "创建一个新的地皮世界");
                             }
@@ -530,6 +595,22 @@ public class SimpleLand extends PluginBase implements Listener {
                                 sender.sendMessage(TextFormat.YELLOW + " /land add <名字> <1|2>" + TextFormat.AQUA + "创建一个新的地皮世界");
                             }
                             break;
+                        case "land":
+                            if (!player.isOp()){
+                                player.sendMessage(TextFormat.RED+"[SimpleLand] 你不是管理员");
+                                return true;
+                            }
+                            if (args.length>1){
+                                if (getPlayerAllLand(args[1])==null){
+                                    player.sendMessage(TextFormat.AQUA+"此玩家没有地皮");
+                                    return true;
+                                }
+                                player.sendMessage(TextFormat.AQUA+">>>===== 玩家:"+args[1]+" ====<<<");
+                                for (Map.Entry map:getPlayerAllLand(args[1]).entrySet()) {
+                                    player.sendMessage(TextFormat.GOLD+"-> "+map.getKey().toString()+"   "+((LandInfo)map.getValue()).getName());
+                                }
+                                player.sendMessage(TextFormat.AQUA+">>>==========================<<<");
+                            }
                         case "add":
                             if(sender.isPlayer()){
                                 if(!isAdmin(player.getName().toLowerCase())){
@@ -537,7 +618,6 @@ public class SimpleLand extends PluginBase implements Listener {
                                     return true;
                                 }else {
                                     if (args.length > 2) {
-                                        //TODO:
                                         addWorld(args[1],Integer.parseInt(args[2]));
                                         sender.sendMessage(TextFormat.RED + "WARNING 成功创建地皮世界 " + args[1]);
                                     }else{
@@ -677,9 +757,28 @@ public class SimpleLand extends PluginBase implements Listener {
                                 }else{
                                     sender.sendMessage(TextFormat.RED + "[SimpleLand] 不存在名字为 "+args[1]+"的地皮");
                                 }
+                            }else if (args.length>2){
+                                if (!player.isOp()){
+                                    player.sendMessage(TextFormat.RED+"你不是管理员");
+                                    return true;
+                                }
+                                if (getPlayerAllLand(args[1])==null){
+                                    player.sendMessage(TextFormat.GOLD+"此玩家没有领地");
+                                    return true;
+                                }
+                                for (LandInfo info:getPlayerAllLand(args[1]).values()) {
+                                    if (info.getName().equals(args[2])){
+                                        ((Player)sender).setPosition(getServer().getLevelByName(info.getLevel()).getSafeSpawn());
+                                        player.teleport(info.getPos());
+                                    }
+                                }
+                            }else {
+                                player.sendMessage(TextFormat.GOLD+"请输入/land help 查看更多帮助");
                             }
                             break;
 
+                       default:
+                           sender.sendMessage(TextFormat.AQUA+"请输入/land help 查看帮助");
                     }
                     return true;
                 }else{

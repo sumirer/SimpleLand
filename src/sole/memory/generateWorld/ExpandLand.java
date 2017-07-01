@@ -77,8 +77,20 @@ public class ExpandLand extends Generator {
     public void populateChunk(int chunkX, int chunkZ) {
 
     }
+    private String AISLE_BLOCK = BLOCK.containsKey("过道方块")&&BLOCK.get("过道方块")!=null?BLOCK.get("过道方块"):Block.WOOD+"";
+    private String FRAME_TOP_BLOCK = BLOCK.containsKey("边框顶层方块")&&BLOCK.get("边框顶层方块")!=null?BLOCK.get("边框顶层方块"):Block.SLAB+"";
+    private String FRAME_BLOCK = BLOCK.containsKey("边框方块")&&BLOCK.get("边框方块")!=null?BLOCK.get("边框方块"):Block.DOUBLE_SLAB+"";
+    private String LAND_SHOP_BLOCK = BLOCK.containsKey("领地石方块")&&BLOCK.get("领地石方块")!=null?BLOCK.get("领地石方块"):Block.NETHER_REACTOR+"";
+    private String LAND_BLOCK = BLOCK.containsKey("地皮方块")&&BLOCK.get("地皮方块")!=null?BLOCK.get("地皮方块"):Block.GRASS+"";
 
-
+    private int getBlockInfo(String block,boolean type){
+        String[] d= block.split(":");
+        if (type){
+            return Integer.valueOf(d[0]);
+        }
+        if (d.length>1)return Integer.valueOf(d[1]);
+        return 0;
+    }
     public ExpandLand(Map<String, Object> options) {
         this.options = options;
         this.chunk = null;
@@ -124,14 +136,19 @@ public class ExpandLand extends Generator {
                         for (z = 0; z < 16; z++) {
                             for (y = 0; y < 10; y++) {
                                 if (x < 4 || z < 4) {
-                                    this.chunk1.setBlockId(x, y, z, Block.WOOL);//羊毛
+                                    this.chunk1.setBlockId(x, y, z,getBlockInfo(AISLE_BLOCK,true));//羊毛
+                                    this.chunk1.setBlockData(x,y,x,getBlockInfo(AISLE_BLOCK,false));
                                 }else if(x > 4 && z > 4){
-                                    this.chunk1.setBlockId(x, y, z, Block.GRASS);//草方块
-                                    this.chunk1.setBlockId(4, 11, 4, Block.NETHER_REACTOR);
+                                    this.chunk1.setBlockId(x, y, z,getBlockInfo(LAND_BLOCK,true));
+                                    this.chunk1.setBlockData(x,y,x,getBlockInfo(LAND_BLOCK,false));
+                                    this.chunk1.setBlockId(4, 11, 4, getBlockInfo(LAND_SHOP_BLOCK,true));
+                                    this.chunk1.setBlockData(4, 11, 4, getBlockInfo(LAND_SHOP_BLOCK,false));
                                 }else{
-                                    this.chunk1.setBlockId(x, y, z, Block.DOUBLE_SLAB);
+                                    this.chunk1.setBlockId(x, y, z, getBlockInfo(FRAME_BLOCK,true));
+                                    this.chunk1.setBlockData(x, y, z, getBlockInfo(FRAME_BLOCK,false));
                                     if (y == 9) {
-                                        this.chunk1.setBlockId(x, y + 1, z, Block.SLAB);
+                                        this.chunk1.setBlockId(x, y + 1, z, getBlockInfo(FRAME_TOP_BLOCK,true));
+                                        this.chunk1.setBlockData(x, y + 1, z, getBlockInfo(FRAME_TOP_BLOCK,false));
                                     }
                                 }
                             }
@@ -173,13 +190,17 @@ public class ExpandLand extends Generator {
                         for (z = 0; z < 16; z++) {
                             for (y = 0; y < 10; y++) {
                                 if (x < 4 ) {
-                                    this.chunk2.setBlockId(x, y, z, Block.WOOL);//羊毛
+                                    this.chunk2.setBlockId(x, y, z,getBlockInfo(AISLE_BLOCK,true));
+                                    this.chunk2.setBlockData(x, y, z,getBlockInfo(AISLE_BLOCK,false));
                                 }else if(x > 4){
-                                    this.chunk2.setBlockId(x, y, z, Block.GRASS);//草方块
+                                    this.chunk2.setBlockId(x, y, z,getBlockInfo(LAND_BLOCK,true));
+                                    this.chunk2.setBlockData(x,y,x,getBlockInfo(LAND_BLOCK,false));
                                 }else{
-                                    this.chunk2.setBlockId(x, y, z, Block.DOUBLE_SLAB);
+                                    this.chunk2.setBlockId(x, y, z, getBlockInfo(FRAME_BLOCK,true));
+                                    this.chunk2.setBlockData(x, y, z, getBlockInfo(FRAME_BLOCK,false));
                                     if (y == 9) {
-                                        this.chunk2.setBlockId(x, y + 1, z, Block.SLAB);
+                                        this.chunk2.setBlockId(x, y + 1, z, getBlockInfo(FRAME_TOP_BLOCK,true));
+                                        this.chunk2.setBlockData(x, y + 1, z, getBlockInfo(FRAME_TOP_BLOCK,false));
                                     }
                                 }
                             }
@@ -221,13 +242,17 @@ public class ExpandLand extends Generator {
                         for (z = 0; z < 16; z++) {
                             for (y = 0; y < 10; y++) {
                                 if (x < 4 ) {
-                                    this.chunk13.setBlockId(x, y, z, Block.WOOL);//羊毛
+                                    this.chunk13.setBlockId(x, y, z,getBlockInfo(AISLE_BLOCK,true));
+                                    this.chunk13.setBlockData(x, y, z,getBlockInfo(AISLE_BLOCK,false));
                                 }else if(x > 4){
-                                    this.chunk13.setBlockId(x, y, z, Block.GRASS);//草方块
+                                    this.chunk13.setBlockId(x, y, z,getBlockInfo(LAND_BLOCK,true));
+                                    this.chunk13.setBlockData(x,y,x,getBlockInfo(LAND_BLOCK,false));
                                 }else{
-                                    this.chunk13.setBlockId(x, y, z, Block.DOUBLE_SLAB);
+                                    this.chunk13.setBlockId(x, y, z, getBlockInfo(FRAME_BLOCK,true));
+                                    this.chunk13.setBlockData(x, y, z, getBlockInfo(FRAME_BLOCK,false));
                                     if (y == 9) {
-                                        this.chunk13.setBlockId(x, y + 1, z, Block.SLAB);
+                                        this.chunk13.setBlockId(x, y + 1, z, getBlockInfo(FRAME_TOP_BLOCK,true));
+                                        this.chunk13.setBlockData(x, y + 1, z, getBlockInfo(FRAME_TOP_BLOCK,false));
                                     }
                                 }
                             }
@@ -269,13 +294,17 @@ public class ExpandLand extends Generator {
                         for (z = 0; z < 16; z++) {
                             for (y = 0; y < 10; y++) {
                                 if (x < 4 || z > 11) {
-                                    this.chunk3.setBlockId(x, y, z, Block.WOOL);//羊毛
+                                    this.chunk3.setBlockId(x, y, z,getBlockInfo(AISLE_BLOCK,true));
+                                    this.chunk3.setBlockData(x, y, z,getBlockInfo(AISLE_BLOCK,false));
                                 }else if(x > 4 && z < 11){
-                                    this.chunk3.setBlockId(x, y, z, Block.GRASS);//草方块
+                                    this.chunk3.setBlockId(x, y, z,getBlockInfo(LAND_BLOCK,true));
+                                    this.chunk3.setBlockData(x,y,x,getBlockInfo(LAND_BLOCK,false));
                                 }else{
-                                    this.chunk3.setBlockId(x, y, z, Block.DOUBLE_SLAB);
+                                    this.chunk3.setBlockId(x, y, z, getBlockInfo(FRAME_BLOCK,true));
+                                    this.chunk3.setBlockData(x, y, z, getBlockInfo(FRAME_BLOCK,false));
                                     if (y == 9) {
-                                        this.chunk3.setBlockId(x, y + 1, z, Block.SLAB);
+                                        this.chunk3.setBlockId(x, y + 1, z, getBlockInfo(FRAME_TOP_BLOCK,true));
+                                        this.chunk3.setBlockData(x, y + 1, z, getBlockInfo(FRAME_TOP_BLOCK,false));
                                     }
                                 }
                             }
@@ -317,13 +346,17 @@ public class ExpandLand extends Generator {
                         for (z = 0; z < 16; z++) {
                             for (y = 0; y < 10; y++) {
                                 if (z < 4) {
-                                    this.chunk4.setBlockId(x, y, z, Block.WOOL);//羊毛
+                                    this.chunk4.setBlockId(x, y, z,getBlockInfo(AISLE_BLOCK,true));
+                                    this.chunk4.setBlockData(x, y, z,getBlockInfo(AISLE_BLOCK,false));
                                 }else if(z > 4 ){
-                                    this.chunk4.setBlockId(x, y, z, Block.GRASS);//草方块
+                                    this.chunk4.setBlockId(x, y, z,getBlockInfo(LAND_BLOCK,true));
+                                    this.chunk4.setBlockData(x,y,x,getBlockInfo(LAND_BLOCK,false));
                                 }else{
-                                    this.chunk4.setBlockId(x, y, z, Block.DOUBLE_SLAB);
+                                    this.chunk4.setBlockId(x, y, z, getBlockInfo(FRAME_BLOCK,true));
+                                    this.chunk4.setBlockData(x, y, z, getBlockInfo(FRAME_BLOCK,false));
                                     if (y == 9) {
-                                        this.chunk4.setBlockId(x, y + 1, z, Block.SLAB);
+                                        this.chunk4.setBlockId(x, y + 1, z, getBlockInfo(FRAME_TOP_BLOCK,true));
+                                        this.chunk4.setBlockData(x, y + 1, z, getBlockInfo(FRAME_TOP_BLOCK,false));
                                     }
                                 }
                             }
@@ -364,13 +397,17 @@ public class ExpandLand extends Generator {
                         for (z = 0; z < 16; z++) {
                             for (y = 0; y < 10; y++) {
                                 if (z < 4) {
-                                    this.chunk12.setBlockId(x, y, z, Block.WOOL);//羊毛
+                                    this.chunk12.setBlockId(x, y, z,getBlockInfo(AISLE_BLOCK,true));
+                                    this.chunk12.setBlockData(x, y, z,getBlockInfo(AISLE_BLOCK,false));
                                 }else if(z > 4 ){
-                                    this.chunk12.setBlockId(x, y, z, Block.GRASS);//草方块
+                                    this.chunk12.setBlockId(x, y, z,getBlockInfo(LAND_BLOCK,true));
+                                    this.chunk12.setBlockData(x,y,x,getBlockInfo(LAND_BLOCK,false));
                                 }else{
-                                    this.chunk12.setBlockId(x, y, z, Block.DOUBLE_SLAB);
+                                    this.chunk12.setBlockId(x, y, z, getBlockInfo(FRAME_BLOCK,true));
+                                    this.chunk12.setBlockData(x, y, z, getBlockInfo(FRAME_BLOCK,false));
                                     if (y == 9) {
-                                        this.chunk12.setBlockId(x, y + 1, z, Block.SLAB);
+                                        this.chunk12.setBlockId(x, y + 1, z, getBlockInfo(FRAME_TOP_BLOCK,true));
+                                        this.chunk12.setBlockData(x, y + 1, z, getBlockInfo(FRAME_TOP_BLOCK,false));
                                     }
                                 }
                             }
@@ -411,13 +448,17 @@ public class ExpandLand extends Generator {
                         for (z = 0; z < 16; z++) {
                             for (y = 0; y < 10; y++) {
                                 if (x > 11 || z<4) {
-                                    this.chunk5.setBlockId(x, y, z, Block.WOOL);//羊毛
+                                    this.chunk5.setBlockId(x, y, z,getBlockInfo(AISLE_BLOCK,true));
+                                    this.chunk5.setBlockData(x, y, z,getBlockInfo(AISLE_BLOCK,false));
                                 }else if(x < 11 && z > 4){
-                                    this.chunk5.setBlockId(x, y, z, Block.GRASS);//草方块
+                                    this.chunk5.setBlockId(x, y, z,getBlockInfo(LAND_BLOCK,true));
+                                    this.chunk5.setBlockData(x,y,x,getBlockInfo(LAND_BLOCK,false));
                                 }else{
-                                    this.chunk5.setBlockId(x, y, z, Block.DOUBLE_SLAB);
+                                    this.chunk5.setBlockId(x, y, z, getBlockInfo(FRAME_BLOCK,true));
+                                    this.chunk5.setBlockData(x, y, z, getBlockInfo(FRAME_BLOCK,false));
                                     if (y == 9) {
-                                        this.chunk5.setBlockId(x, y + 1, z, Block.SLAB);
+                                        this.chunk5.setBlockId(x, y + 1, z, getBlockInfo(FRAME_TOP_BLOCK,true));
+                                        this.chunk5.setBlockData(x, y + 1, z, getBlockInfo(FRAME_TOP_BLOCK,false));
                                     }
                                 }
                             }
@@ -459,13 +500,17 @@ public class ExpandLand extends Generator {
                         for (z = 0; z < 16; z++) {
                             for (y = 0; y < 10; y++) {
                                 if (x > 11 ) {
-                                    this.chunk6.setBlockId(x, y, z, Block.WOOL);//羊毛
+                                    this.chunk6.setBlockId(x, y, z,getBlockInfo(AISLE_BLOCK,true));
+                                    this.chunk6.setBlockData(x, y, z,getBlockInfo(AISLE_BLOCK,false));
                                 }else if(x < 11 ){
-                                    this.chunk6.setBlockId(x, y, z, Block.GRASS);//草方块
+                                    this.chunk6.setBlockId(x, y, z,getBlockInfo(LAND_BLOCK,true));
+                                    this.chunk6.setBlockData(x,y,x,getBlockInfo(LAND_BLOCK,false));
                                 }else{
-                                    this.chunk6.setBlockId(x, y, z, Block.DOUBLE_SLAB);
+                                    this.chunk6.setBlockId(x, y, z, getBlockInfo(FRAME_BLOCK,true));
+                                    this.chunk6.setBlockData(x, y, z, getBlockInfo(FRAME_BLOCK,false));
                                     if (y == 9) {
-                                        this.chunk6.setBlockId(x, y + 1, z, Block.SLAB);
+                                        this.chunk6.setBlockId(x, y + 1, z, getBlockInfo(FRAME_TOP_BLOCK,true));
+                                        this.chunk6.setBlockData(x, y + 1, z, getBlockInfo(FRAME_TOP_BLOCK,false));
                                     }
                                 }
                             }
@@ -506,13 +551,17 @@ public class ExpandLand extends Generator {
                         for (z = 0; z < 16; z++) {
                             for (y = 0; y < 10; y++) {
                                 if (x > 11 ) {
-                                    this.chunk11.setBlockId(x, y, z, Block.WOOL);//羊毛
+                                    this.chunk11.setBlockId(x, y, z,getBlockInfo(AISLE_BLOCK,true));
+                                    this.chunk11.setBlockData(x, y, z,getBlockInfo(AISLE_BLOCK,false));
                                 }else if(x < 11 ){
-                                    this.chunk11.setBlockId(x, y, z, Block.GRASS);//草方块
+                                    this.chunk11.setBlockId(x, y, z,getBlockInfo(LAND_BLOCK,true));
+                                    this.chunk11.setBlockData(x,y,x,getBlockInfo(LAND_BLOCK,false));
                                 }else{
-                                    this.chunk11.setBlockId(x, y, z, Block.DOUBLE_SLAB);
+                                    this.chunk11.setBlockId(x, y, z, getBlockInfo(FRAME_BLOCK,true));
+                                    this.chunk11.setBlockData(x, y, z, getBlockInfo(FRAME_BLOCK,false));
                                     if (y == 9) {
-                                        this.chunk11.setBlockId(x, y + 1, z, Block.SLAB);
+                                        this.chunk11.setBlockId(x, y + 1, z, getBlockInfo(FRAME_TOP_BLOCK,true));
+                                        this.chunk11.setBlockData(x, y + 1, z, getBlockInfo(FRAME_TOP_BLOCK,false));
                                     }
                                 }
                             }
@@ -554,13 +603,17 @@ public class ExpandLand extends Generator {
                         for (z = 0; z < 16; z++) {
                             for (y = 0; y < 10; y++) {
                                 if (x > 11 || z > 11) {
-                                    this.chunk7.setBlockId(x, y, z, Block.WOOL);//羊毛
+                                    this.chunk7.setBlockId(x, y, z,getBlockInfo(AISLE_BLOCK,true));
+                                    this.chunk7.setBlockData(x, y, z,getBlockInfo(AISLE_BLOCK,false));
                                 }else if(x < 11 && z < 11){
-                                    this.chunk7.setBlockId(x, y, z, Block.GRASS);//草方块
+                                    this.chunk7.setBlockId(x, y, z,getBlockInfo(LAND_BLOCK,true));
+                                    this.chunk7.setBlockData(x,y,x,getBlockInfo(LAND_BLOCK,false));
                                 }else{
-                                    this.chunk7.setBlockId(x, y, z, Block.DOUBLE_SLAB);
+                                    this.chunk7.setBlockId(x, y, z, getBlockInfo(FRAME_BLOCK,true));
+                                    this.chunk7.setBlockData(x, y, z, getBlockInfo(FRAME_BLOCK,false));
                                     if (y == 9) {
-                                        this.chunk7.setBlockId(x, y + 1, z, Block.SLAB);
+                                        this.chunk7.setBlockId(x, y + 1, z, getBlockInfo(FRAME_TOP_BLOCK,true));
+                                        this.chunk7.setBlockData(x, y + 1, z, getBlockInfo(FRAME_TOP_BLOCK,false));
                                     }
                                 }
                             }
@@ -602,13 +655,17 @@ public class ExpandLand extends Generator {
                         for (z = 0; z < 16; z++) {
                             for (y = 0; y < 10; y++) {
                                 if ( z > 11) {
-                                    this.chunk8.setBlockId(x, y, z, Block.WOOL);//羊毛
+                                    this.chunk8.setBlockId(x, y, z,getBlockInfo(AISLE_BLOCK,true));
+                                    this.chunk8.setBlockData(x, y, z,getBlockInfo(AISLE_BLOCK,false));
                                 }else if( z < 11){
-                                    this.chunk8.setBlockId(x, y, z, Block.GRASS);//草方块
+                                    this.chunk8.setBlockId(x, y, z,getBlockInfo(LAND_BLOCK,true));
+                                    this.chunk8.setBlockData(x,y,x,getBlockInfo(LAND_BLOCK,false));
                                 }else{
-                                    this.chunk8.setBlockId(x, y, z, Block.DOUBLE_SLAB);
+                                    this.chunk8.setBlockId(x, y, z, getBlockInfo(FRAME_BLOCK,true));
+                                    this.chunk8.setBlockData(x, y, z, getBlockInfo(FRAME_BLOCK,false));
                                     if (y == 9) {
-                                        this.chunk8.setBlockId(x, y + 1, z, Block.SLAB);
+                                        this.chunk8.setBlockId(x, y + 1, z, getBlockInfo(FRAME_TOP_BLOCK,true));
+                                        this.chunk8.setBlockData(x, y + 1, z, getBlockInfo(FRAME_TOP_BLOCK,false));
                                     }
                                 }
                             }
@@ -650,13 +707,17 @@ public class ExpandLand extends Generator {
                         for (z = 0; z < 16; z++) {
                             for (y = 0; y < 10; y++) {
                                 if ( z > 11) {
-                                    this.chunk10.setBlockId(x, y, z, Block.WOOL);//羊毛
+                                    this.chunk10.setBlockId(x, y, z,getBlockInfo(AISLE_BLOCK,true));
+                                    this.chunk10.setBlockData(x, y, z,getBlockInfo(AISLE_BLOCK,false));
                                 }else if( z < 11){
-                                    this.chunk10.setBlockId(x, y, z, Block.GRASS);//草方块
+                                    this.chunk10.setBlockId(x, y, z,getBlockInfo(LAND_BLOCK,true));
+                                    this.chunk10.setBlockData(x,y,x,getBlockInfo(LAND_BLOCK,false));
                                 }else{
-                                    this.chunk10.setBlockId(x, y, z, Block.DOUBLE_SLAB);
+                                    this.chunk10.setBlockId(x, y, z, getBlockInfo(FRAME_BLOCK,true));
+                                    this.chunk10.setBlockData(x, y, z, getBlockInfo(FRAME_BLOCK,false));
                                     if (y == 9) {
-                                        this.chunk10.setBlockId(x, y + 1, z, Block.SLAB);
+                                        this.chunk10.setBlockId(x, y + 1, z, getBlockInfo(FRAME_TOP_BLOCK,true));
+                                        this.chunk10.setBlockData(x, y + 1, z, getBlockInfo(FRAME_TOP_BLOCK,false));
                                     }
                                 }
                             }
@@ -697,7 +758,8 @@ public class ExpandLand extends Generator {
                     for (x=0; x < 16; x++) {
                         for (z=0; z < 16; z++) {
                             for (y=0; y < 10; y++) {
-                                this.chunk9.setBlockId(x, y, z, Block.GRASS);//草方块
+                                this.chunk9.setBlockId(x, y, z,getBlockInfo(LAND_BLOCK,true));
+                                this.chunk9.setBlockData(x,y,x,getBlockInfo(LAND_BLOCK,false));
                             }
                         }
                     }
