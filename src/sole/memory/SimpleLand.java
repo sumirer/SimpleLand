@@ -3,8 +3,10 @@ package sole.memory;
 import cn.nukkit.Player;
 import cn.nukkit.Server;
 import cn.nukkit.block.Block;
+import cn.nukkit.command.Command;
+import cn.nukkit.command.CommandSender;
+import cn.nukkit.event.Listener;
 import cn.nukkit.level.generator.Generator;
-import cn.nukkit.math.Vector3;
 import cn.nukkit.plugin.PluginBase;
 import cn.nukkit.utils.Config;
 import cn.nukkit.utils.TextFormat;
@@ -23,7 +25,7 @@ import java.util.Map;
  * Created by SoleMemory
  * on 2017/3/30
  */
-public class SimpleLand extends PluginBase {
+public class SimpleLand extends PluginBase implements Listener {
 
 
     private HashMap<String,HashMap<String,LandInfo>> owner_list = new HashMap<>();
@@ -61,21 +63,23 @@ public class SimpleLand extends PluginBase {
 
 
     @Override
+    public void onLoad() {
+        createWorld();
+    }
+
+    @Override
     public void onEnable() {
 
         getDataFolder().mkdir();
         saveDefaultConfig();
-        saveResource("World.yml");
         saveResource("worldblock.yml");
         this.getServer().getLogger().info("[SimpleLand] 地皮插件加载成功");
         //Config cfg = new Config(getDataFolder() + "/config.yml", Config.YAML);
         initData();
         //initGenerateBlock();
-        Config c = new Config(getDataFolder()+"/World.yml",Config.YAML);
-        for (String landsds:c.getKeys()) {
-            createWorld(landsds,Integer.parseInt(c.get(landsds).toString()));
-        }
+        WorldCheck();
         Server.getInstance().getPluginManager().registerEvents(new ListenerEvent(this), this);
+
         this.getServer().getLogger().info("[SimpleLand] 加载成功");
     }
 
@@ -131,7 +135,7 @@ public class SimpleLand extends PluginBase {
     }
     @Override
     public void onDisable() {
-        Config c = new Config(getDataFolder() + "/World.yml", Config.YAML);
+        Config c = new Config(getDataFolder() + "/worldconfig.yml", Config.YAML);
         for (String landsds:c.getKeys()) {
             getServer().getLevelByName(landsds).unload();
             getServer().getLogger().info("[SimpleLand] 地皮"+landsds+" 保护卸载成功");
@@ -139,27 +143,34 @@ public class SimpleLand extends PluginBase {
     }
 
 
-    public void createWorld(String world, int type){
-        if(type == 1) {
-            Generator.addGenerator(Land.class, world, 4);
-            getServer().generateLevel(world, 2333, Land.class);
+    private void createWorld(){
+        saveResource("woeldconfig.yml");
+        Config c = new Config(getDataFolder()+ "/worldconfig.yml",Config.YAML);
+        for (String landsds:c.getKeys()) {
+            if (c.getInt(landsds)==1) {
+                Generator.addGenerator(Land.class, landsds, 4);
+            }else {
+                Generator.addGenerator(ExpandLand.class,landsds,4);
+            }
         }
-        if(type == 2) {
-            Generator.addGenerator(ExpandLand.class, world, 4);
-            getServer().generateLevel(world, 2333, ExpandLand.class);
-        }
-        getServer().loadLevel(world);
-        this.getServer().getLogger().info(TextFormat.AQUA+"[SimpleLand] 地皮世界"+world+"加载成功");
-        getServer().getLevelByName(world).setSpawnLocation(new Vector3(0.0D, 10.0D, 0.0D));
     }
 
-
-    @Override
-    public void onLoad() {
-        Config c = new Config(getDataFolder() + "/World.yml", Config.YAML);
+    private void WorldCheck(){
+        Config c = new Config(getDataFolder()+ "/worldconfig.yml",Config.YAML);
         for (String landsds:c.getKeys()) {
-            createWorld(landsds,c.getInt(landsds));
-            this.getServer().getLogger().info(TextFormat.AQUA+"[SimpleLand] 地皮世界"+landsds+"加载成功");
+            if (c.getInt(landsds)==1) {
+
+                if (getServer().getLevelByName(landsds) == null){
+                    getServer().generateLevel(landsds,2333,Land.class);
+                    getServer().loadLevel(landsds);
+                }
+            }else {
+                if (getServer().getLevelByName(landsds) == null){
+                    getServer().generateLevel(landsds,2333,ExpandLand.class);
+                    getServer().loadLevel(landsds);
+                }
+            }
+
         }
     }
 
@@ -212,18 +223,18 @@ public class SimpleLand extends PluginBase {
     }
 
 
-     protected int getWorldType(Block block){
-         Config c = new Config(getDataFolder() + "/World.yml", Config.YAML);
+     public int getWorldType(Block block){
+         Config c = new Config(getDataFolder() + "/worldconfig.yml", Config.YAML);
         String id = block.getLevel().getFolderName();
         return Integer.parseInt(c.get(id).toString());
      }
 
-     protected int getMaxLandCount(){
+     public int getMaxLandCount(){
          return getConfig().getInt("limit",4);
      }
 
 
-     protected void removeLand(Player player, Block block) {
+     public void removeLand(Player player, Block block) {
          String id = (int) block.x + "-" + (int) block.z + "-" + block.getLevel().getFolderName();
          if (owner_list.get(player.getName().toLowerCase()).size() == 1) {
              owner_list.remove(player.getName().toLowerCase());
@@ -234,7 +245,7 @@ public class SimpleLand extends PluginBase {
          saveLandData();
      }
 
-     protected boolean isLandBlock(Block block, int type) {
+     public boolean isLandBlock(Block block, int type) {
          if (type == 1) {
              int x = (int) block.getX();
              int z = (int) block.getZ();
@@ -263,7 +274,7 @@ public class SimpleLand extends PluginBase {
      }
 
 
-     protected int getLandCount(Player player){
+     public int getLandCount(Player player){
          if (!owner_list.containsKey(player.getName().toLowerCase())) return 0;
          return owner_list.get(player.getName().toLowerCase()).size();
      }
@@ -275,24 +286,29 @@ public class SimpleLand extends PluginBase {
 
 
       public boolean isLandWord(String land){
-          Config c = new Config(getDataFolder() + "/World.yml", Config.YAML);
-          return c.exists(land);
+          Map<String,Object> c = new Config(getDataFolder() + "/worldconfig.yml", Config.YAML).getAll();
+          for (String lands:c.keySet()) {
+              if (lands.equals(land)){
+                  return true;
+              }
+          }
+          return false;
       }
 
 
-   public void setLandName(Player player, String id,String name){
+   private void setLandName(Player player, String id, String name){
             LandInfo map = owner_list.get(player.getName().toLowerCase()).get(id);
             map.setName(name);
     }
-   public void addWorld(String worldname, int type){
-       Config c = new Config(getDataFolder() + "/World.yml", Config.YAML);
+   private void addWorld(String worldname, int type){
+       Config c = new Config(getDataFolder() + "/worldconfig.yml", Config.YAML);
        c.set(worldname,type);
        c.save();
    }
 
 
 
-    protected boolean isGuest(Player player, Block block){
+    public boolean isGuest(Player player, Block block){
         if (!guest_list.containsKey(player.getName().toLowerCase())) return  false;
         for (GuestInfo info:guest_list.get(player.getName().toLowerCase()).values()) {
             if (block.x>info.getX1()&&block.x<info.getX2()&&block.z>info.getZ1()&&block.z<info.getZ2()){
@@ -301,7 +317,7 @@ public class SimpleLand extends PluginBase {
         }
         return false;
     }
-    public boolean isLandName(Player player,String name) {
+    private boolean isLandName(Player player, String name) {
         if (!owner_list.containsKey(player.getName().toLowerCase())) return false;
         for (LandInfo info : owner_list.get(player.getName().toLowerCase()).values()) {
             if (info.getName().equals(name)){
@@ -310,7 +326,7 @@ public class SimpleLand extends PluginBase {
         }
         return false;
     }
-    protected LandInfo getLandByName(Player player, String name){
+    private LandInfo getLandByName(Player player, String name){
         for (LandInfo info:owner_list.get(player.getName().toLowerCase()).values()) {
             if (info.getName().equals(name)){
                 return info;
@@ -327,11 +343,11 @@ public class SimpleLand extends PluginBase {
         }
         return false;
     }
-    public boolean isGuest(String player,String id) {
+    private boolean isGuest(String player, String id) {
         return guest_list.containsKey(player.toLowerCase()) && guest_list.get(player.toLowerCase()).containsKey(id);
     }
 
-    public void addGuest(String player, LandInfo landInfo){
+    private void addGuest(String player, LandInfo landInfo){
         GuestInfo info = new GuestInfo();
         info.id = landInfo.getId();
         info.x1 = landInfo.getX1();
@@ -354,7 +370,7 @@ public class SimpleLand extends PluginBase {
         saveGuestData();
     }
 
-    public boolean setLandOwnerChange(Player owner,String player,LandInfo landInfo){
+    private boolean setLandOwnerChange(Player owner, String player, LandInfo landInfo){
         if (getLandCount(player)>=getMaxLandCount()) return false;
         landInfo.setOwner(player.toLowerCase());
         if (!owner_list.containsKey(player.toLowerCase())){
@@ -370,7 +386,7 @@ public class SimpleLand extends PluginBase {
         saveLandData();
         return true;
     }
-    public void showAllLandName(Player player){
+    private void showAllLandName(Player player){
         player.sendMessage(TextFormat.AQUA + "====地皮列表===");
         if (!owner_list.containsKey(player.getName().toLowerCase())){
             player.sendMessage(TextFormat.RED + "无地皮");
@@ -385,7 +401,7 @@ public class SimpleLand extends PluginBase {
     }
 
 
-    protected void createNewLand(Block block, Player player, int type){
+    public void createNewLand(Block block, Player player, int type){
         LandInfo info = new LandInfo();
         info.x1 = (int)block.x;
         info.z1 = (int)block.z;
@@ -416,7 +432,7 @@ public class SimpleLand extends PluginBase {
     }
 
 
-    public void delGuest(Player owner, String player, String id){
+    private void delGuest(Player owner, String player, String id){
         if (!guest_list.containsKey(player.toLowerCase())) return;
         for (Map.Entry m:guest_list.get(player.toLowerCase()).entrySet()) {
             if (((GuestInfo)m.getValue()).getOwer().equals(owner.getName().toLowerCase())&&((GuestInfo)m.getValue()).getId().equals(id)){
@@ -427,7 +443,7 @@ public class SimpleLand extends PluginBase {
     }
 
 
-    public void addAdmin(String player){
+    private void addAdmin(String player){
         Config cfg = new Config(getDataFolder() + "/resources/config.yml", Config.YAML);
         List<String> map = cfg.getStringList("admin");
         map.add(player.toLowerCase());
@@ -438,7 +454,7 @@ public class SimpleLand extends PluginBase {
 
 
 
-    public void delAdmin(String player){
+    private void delAdmin(String player){
         Config cfg = new Config(getDataFolder() + "/resources/config.yml", Config.YAML);
         List map = cfg.getList("admin");
         map.remove(player.toLowerCase());
@@ -447,14 +463,14 @@ public class SimpleLand extends PluginBase {
         cfg.save();
     }
 
-    protected boolean isAdmin(String player){
+    public boolean isAdmin(String player) {
         Config cfg = new Config(getDataFolder() + "/resources/config.yml", Config.YAML);
-        List map = cfg.getList("admin");
-        return map.contains(player.toLowerCase());
+        List<String> map = cfg.getStringList("admin");
+        return map.toArray().length > 0 && map.contains(player.toLowerCase());
     }
 
-    protected boolean isOwner(Player player, Block block){
-        if (owner_list.containsKey(player.getName().toLowerCase())) return false;
+    public boolean isOwner(Player player, Block block){
+        if (!owner_list.containsKey(player.getName().toLowerCase())) return false;
         for (LandInfo info:owner_list.get(player.getName().toLowerCase()).values()) {
             if (block.x>info.getX1()&&block.x<info.getX2()&&block.z>info.getZ1()&&block.z<info.getZ2()){
                 return true;
@@ -462,8 +478,8 @@ public class SimpleLand extends PluginBase {
         }
         return false;
     }
-    public boolean isOwner(Player player){
-        if (owner_list.containsKey(player.getName().toLowerCase())) return false;
+    private boolean isOwner(Player player){
+        if (!owner_list.containsKey(player.getName().toLowerCase())) return false;
         for (LandInfo info:owner_list.get(player.getName().toLowerCase()).values()) {
             if (player.x>info.getX1()&&player.x<info.getX2()&&player.z>info.getZ1()&&player.z<info.getZ2()){
                 return true;
@@ -471,10 +487,10 @@ public class SimpleLand extends PluginBase {
         }
         return false;
     }
-    protected boolean isOwner(Player player, String id) {
-        return !owner_list.containsKey(player.getName().toLowerCase()) && owner_list.get(player.getName().toLowerCase()).containsKey(id);
+    public boolean isOwner(Player player, String id) {
+        return owner_list.containsKey(player.getName().toLowerCase()) && owner_list.get(player.getName().toLowerCase()).containsKey(id);
     }
-    public LandInfo getLand(Player player){
+    private LandInfo getLand(Player player){
         for (LandInfo info:owner_list.get(player.getName().toLowerCase()).values()) {
             if (player.x>info.getX1()&&player.x<info.getX2()&&player.z>info.getZ1()&&player.z<info.getZ2()){
                 return info;
@@ -483,12 +499,194 @@ public class SimpleLand extends PluginBase {
         return null;
     }
 
-    protected boolean isBuyLand(String id) {
+    public boolean isBuyLand(String id) {
         for (HashMap<String,LandInfo> map:owner_list.values()) {
             if (map.containsKey(id)){
                 return true;
             }
         }
         return false;
+    }
+    @SuppressWarnings("unchecked")
+    public boolean onCommand(CommandSender sender, Command command, String label, String[] args){
+
+        Player player = this.getServer().getPlayer(sender.getName());
+        switch (command.getName()){
+            case "land":
+                if(args.length > 0){
+                    switch (args[0]) {
+                        case "help":
+                            sender.sendMessage(TextFormat.AQUA + ">==========[ SimpleLand ]==========<");
+                            sender.sendMessage(TextFormat.YELLOW + " /land admin <add|del> " + TextFormat.AQUA + "后台添加地皮的管理员，无视权限");
+                            sender.sendMessage(TextFormat.YELLOW + " /land guest <玩家> " + TextFormat.AQUA + "添加访客，给玩家破坏你的地皮授权");
+                            sender.sendMessage(TextFormat.YELLOW + " /land myland " + TextFormat.AQUA + "我的地皮列表");
+                            sender.sendMessage(TextFormat.YELLOW + " /land tp <地皮名字> " + TextFormat.AQUA + "tp到地皮名字为<地皮名字>的地皮");
+                            sender.sendMessage(TextFormat.YELLOW + " /land givland <玩家> " + TextFormat.AQUA + "把地皮给一个玩家，管理员无视权限");
+                            sender.sendMessage(TextFormat.YELLOW + " /land setname <名字> " + TextFormat.AQUA + "更改地皮名字");
+                            if(sender.isPlayer() && sender.isOp()) {
+                                sender.sendMessage(TextFormat.YELLOW + " /land add <名字> <1|2>" + TextFormat.AQUA + "创建一个新的地皮世界");
+                            }
+                            if(!sender.isPlayer()){
+                                sender.sendMessage(TextFormat.YELLOW + " /land add <名字> <1|2>" + TextFormat.AQUA + "创建一个新的地皮世界");
+                            }
+                            break;
+                        case "add":
+                            if(sender.isPlayer()){
+                                if(!isAdmin(player.getName().toLowerCase())){
+                                    sender.sendMessage(TextFormat.RED+"WARNING 你不是管理员，请勿执行此命令");
+                                    return true;
+                                }else {
+                                    if (args.length > 2) {
+                                        //TODO:
+                                        addWorld(args[1],Integer.parseInt(args[2]));
+                                        sender.sendMessage(TextFormat.RED + "WARNING 成功创建地皮世界 " + args[1]);
+                                    }else{
+                                        sender.sendMessage(TextFormat.RED + "WARNING 请输入世界名字和世界类型 <1|2>");
+                                    }
+                                }
+                            }
+                            break;
+                        case "admin":
+                            if (sender.isPlayer()) {
+                                sender.sendMessage(TextFormat.RED + "[SimpleLand] 请在后台运行此命令");
+                                return true;
+                            }
+                            if (args.length > 2) {
+                                if (args[1].equals("add")) {
+                                    if (isAdmin(args[2])) {
+                                        sender.sendMessage(TextFormat.RED + "[SimpleLand] " + args[2] + "已经是管理员了，无法再次添加");
+                                        return true;
+                                    }
+                                    addAdmin(args[2]);
+                                    sender.sendMessage(TextFormat.RED + "[SimpleLand] " + args[2] + "成功添加" + args[2] + "为管理员");
+                                }
+                                if (args[1].equals("del")) {
+                                    if (isAdmin(args[2])) {
+                                        delAdmin(args[2]);
+                                        sender.sendMessage(TextFormat.RED + "[SimpleLand] " + args[2] + "已经删除" + args[2] + "的管理员身份");
+                                        return true;
+                                    } else {
+                                        sender.sendMessage(TextFormat.RED + "[SimpleLand] " + args[2] + "不是管理员，无法删除");
+                                        return true;
+                                    }
+                                }
+                            } else {
+                                sender.sendMessage(TextFormat.RED + "[SimpleLand] 请输入/land help 查看更多帮助");
+                            }
+                            break;
+                        case  "guest":
+                            if (!sender.isPlayer()) {
+                                sender.sendMessage(TextFormat.RED + "[SimpleLand] 请在游戏中运行此命令");
+                                return true;
+                            }
+                            if(args.length > 1){
+                                if (isLandWord(player.getLevel().getName())) {
+                                    if(isOwner(player)){
+                                        if(isGuest(args[1],getLand(player).getId())){
+                                            delGuest(player,args[1],getLand(player).getId());
+                                            sender.sendMessage(TextFormat.AQUA+"[SimpleLand] 成功删除访客"+args[1]);
+                                        }else {
+                                            addGuest(args[1],getLand(player));
+                                            sender.sendMessage(TextFormat.AQUA+"[SimpleLand] 成功添加访客"+args[1]);
+                                        }
+                                    }else {
+                                        sender.sendMessage(TextFormat.AQUA+"[SimpleLand] 这不是你的领地");
+                                    }
+                                }else {
+                                    sender.sendMessage(TextFormat.RED+"[SimpleLand] 这不是领地地图");
+                                }
+                            }else {
+                                sender.sendMessage(TextFormat.AQUA+"[SimpleLand] 请输入/land help 查看更多帮助");
+                            }
+                            break;
+                        case "myland":
+                            if (!sender.isPlayer()) {
+                                sender.sendMessage(TextFormat.RED + "[SimpleLand] 请在游戏中运行此命令");
+                                return true;
+                            }
+                            showAllLandName(player);
+                            break;
+                        case "giveland":
+                            if (!sender.isPlayer()) {
+                                sender.sendMessage(TextFormat.RED + "[SimpleLand] 请在游戏中运行此命令");
+                                return true;
+                            }
+                            if(args.length > 1){
+                                if (isLandWord(player.getLevel().getName())) {
+
+                                    if(isAdmin(player.getName().toLowerCase())){
+                                        LandInfo info = getLand(player);
+                                        if (info==null){
+                                            player.sendMessage(TextFormat.AQUA+"[SimpleLand] 这里没有领地");
+                                        }
+                                        if(setLandOwnerChange(player,args[1],info)) {
+                                            sender.sendMessage(TextFormat.AQUA + "[SimpleLand] 赠送地皮给玩家" + args[1]);
+                                        }else {
+                                            player.sendMessage(TextFormat.AQUA + "[SimpleLand] 无法赠送地皮给玩家，该玩家地皮已经上限");
+                                        }
+                                        sender.sendMessage(TextFormat.AQUA+"[SimpleLand] 强制赠送地皮给玩家"+args[1]);
+                                        return true;
+                                    }
+                                    if(isOwner(player)){
+                                        if(setLandOwnerChange(player,args[1],getLand(player))) {
+                                            sender.sendMessage(TextFormat.AQUA + "[SimpleLand] 赠送地皮给玩家" + args[1]);
+                                        }else {
+                                            player.sendMessage(TextFormat.AQUA + "[SimpleLand] 无法赠送地皮给玩家，该玩家地皮已经上限");
+                                        }
+                                    }else {
+                                        sender.sendMessage(TextFormat.AQUA+"[SimpleLand] 这不是你的领地");
+                                    }
+                                }else {
+                                    sender.sendMessage(TextFormat.RED+"[SimpleLand] 这不是领地地图");
+                                }
+                            }else {
+                                sender.sendMessage(TextFormat.AQUA+"[SimpleLand] 请输入/land help 查看更多帮助");
+                            }
+                            break;
+                        case  "setname":
+                            if (!sender.isPlayer()) {
+                                sender.sendMessage(TextFormat.RED + "[SimpleLand] 请在游戏中运行此命令");
+                                return true;
+                            }
+                            if(args.length > 1){
+                                if (isLandWord(player.getLevel().getName())) {
+                                    if (isOwner(player)) {
+                                        setLandName(player,getLand(player).getId(),args[1]);
+                                        sender.sendMessage(TextFormat.AQUA + "[SimpleLand] 成功设置此地皮的名字为 "+args[1]);
+                                    }else {
+                                        sender.sendMessage(TextFormat.AQUA+"[SimpleLand] 这不是你的领地");
+                                    }
+                                }else {
+                                    sender.sendMessage(TextFormat.RED+"[SimpleLand] 这不是领地地图");
+                                }
+                            }else {
+                                sender.sendMessage(TextFormat.AQUA+"[SimpleLand] 请输入/land help 查看更多帮助");
+                            }
+                            break;
+                        case "tp":
+                            if (!sender.isPlayer()) {
+                                sender.sendMessage(TextFormat.RED + "[SimpleLand] 请在游戏中运行此命令");
+                                return true;
+                            }
+                            if(args.length > 1){
+                                if(isLandName(player,args[1])){
+                                    LandInfo a =getLandByName(player,args[1]);
+                                    ((Player)sender).setPosition(getServer().getLevelByName(a.getLevel()).getSafeSpawn());
+                                    player.teleport(a.getPos());
+                                    sender.sendMessage(TextFormat.AQUA + "[SimpleLand] 成功传送到地皮 "+args[1]);
+                                }else{
+                                    sender.sendMessage(TextFormat.RED + "[SimpleLand] 不存在名字为 "+args[1]+"的地皮");
+                                }
+                            }
+                            break;
+
+                    }
+                    return true;
+                }else{
+                    sender.sendMessage(TextFormat.AQUA+"[SimpleLand] 请输入/land help 查看更多帮助！！");
+                }
+                break;
+        }
+        return true;
     }
 }
