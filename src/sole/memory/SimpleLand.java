@@ -44,10 +44,14 @@ public class SimpleLand extends PluginBase implements Listener {
     @Override
     public void onEnable() {
 
-        getDataFolder().mkdir();
+        if (getDataFolder().mkdir()){
+            Server.getInstance().getLogger().info("Hello SimpleLand");
+        }
         if (haveOldDate()){
             changeOldData();
-            delOldData();
+            if (delOldData()){
+                Server.getInstance().getLogger().info(TextFormat.AQUA+"旧数据清理成功");
+            }
         }
         saveDefaultConfig();
         saveResource("worldblock.yml");
@@ -91,60 +95,58 @@ public class SimpleLand extends PluginBase implements Listener {
         saveLandData();
         Server.getInstance().getLogger().info(TextFormat.AQUA+"数据转换成功");
     }
-    private void delOldData(){
-        File file=new File(getDataFolder()+"/SimpleLand.yml");
-        if (file.exists()){
-            file.delete();
+    private boolean delOldData() {
+        File file = new File(getDataFolder() + "/SimpleLand.yml");
+        if (file.exists()) {
+            return file.delete();
+
         }
-        File file1 = new File(getDataFolder()+"/LandName.yml");
-        if (file1.exists()){
-            file1.delete();
+        File file1 = new File(getDataFolder() + "/LandName.yml");
+        if (file1.exists()) {
+            return file1.delete();
         }
-        File file2 = new File(getDataFolder()+"/Guest.yml");
-        if (file2.exists()){
-            file2.delete();
-        }
-        Server.getInstance().getLogger().info(TextFormat.AQUA+"旧数据清理成功");
+        File file2 = new File(getDataFolder() + "/Guest.yml");
+        return file2.exists() && file2.delete();
     }
     private void initData(){
         Map<String, Object> cfgg = new Config(getDataFolder() + "/SimpleGuest.yml", Config.YAML).getAll();
-        cfgg.entrySet().forEach((name)->{
+        cfgg.forEach((name,guest_info)->{
             @SuppressWarnings("unchecked")
-            HashMap<String,HashMap<String,Object>> s = (HashMap) name.getValue();
+            HashMap<String,HashMap<String,Object>> s = (HashMap) guest_info;
             HashMap<String,GuestInfo> ns = new HashMap<>();
-            s.entrySet().forEach((id)->{
+            s.forEach((id,all_info)->{
                 GuestInfo mn = new GuestInfo();
-                mn.x1 = Integer.valueOf((id.getValue()).get("x1").toString());
-                mn.z1 = Integer.valueOf((id.getValue()).get("z1").toString());
-                mn.x2 = Integer.valueOf((id.getValue()).get("x2").toString());
-                mn.z2 = Integer.valueOf((id.getValue()).get("z2").toString());
-                mn.id = id.getValue().get("id").toString();
-                mn.owner = (id.getValue()).get("owner").toString();
-                mn.canbreak = (boolean)id.getValue().get("break");
-                mn.canjoin = (boolean)id.getValue().get("join");
-                mn.canplace = (boolean)id.getValue().get("place");
-                ns.put(id.getKey(),mn);
+                mn.x1 = Integer.valueOf(all_info.get("x1").toString());
+                mn.z1 = Integer.valueOf(all_info.get("z1").toString());
+                mn.x2 = Integer.valueOf(all_info.get("x2").toString());
+                mn.z2 = Integer.valueOf(all_info.get("z2").toString());
+                mn.id = all_info.get("id").toString();
+                mn.owner = all_info.get("owner").toString();
+                mn.canbreak = (boolean)all_info.get("break");
+                mn.canjoin = (boolean)all_info.get("join");
+                mn.canplace = (boolean)all_info.get("place");
+                ns.put(id,mn);
             });
-            guest_list.put(name.getKey(),ns);
+            guest_list.put(name,ns);
         });
-        Map<String, Object> cfga = new Config(getDataFolder() + "/Land.yml", Config.YAML).getAll();
-        cfga.entrySet().forEach((name)->{
+        Map<String, Object> cfg_land = new Config(getDataFolder() + "/Land.yml", Config.YAML).getAll();
+        cfg_land.forEach((name,land_info)->{
             @SuppressWarnings("unchecked")
-            HashMap<String,HashMap<String,Object>> s = (HashMap) name.getValue();
+            HashMap<String,HashMap<String,Object>> s = (HashMap) land_info;
             HashMap<String,LandInfo> ns = new HashMap<>();
-            s.entrySet().forEach((id)->{
+            s.forEach((id,all_info)->{
                 LandInfo mn = new LandInfo();
-                mn.x1 = Integer.valueOf((id.getValue()).get("x1").toString());
-                mn.z1 = Integer.valueOf((id.getValue()).get("z1").toString());
-                mn.x2 = Integer.valueOf((id.getValue()).get("x2").toString());
-                mn.z2 = Integer.valueOf((id.getValue()).get("z2").toString());
-                mn.owner = (id.getValue()).get("owner").toString();
-                mn.level = (id.getValue()).get("level").toString();
-                mn.id = (id.getValue()).get("id").toString();
-                mn.name = (id.getValue()).get("name").toString();
-                ns.put(id.getKey(),mn);
+                mn.x1 = Integer.valueOf(all_info.get("x1").toString());
+                mn.z1 = Integer.valueOf(all_info.get("z1").toString());
+                mn.x2 = Integer.valueOf(all_info.get("x2").toString());
+                mn.z2 = Integer.valueOf(all_info.get("z2").toString());
+                mn.owner = all_info.get("owner").toString();
+                mn.level = all_info.get("level").toString();
+                mn.id = all_info.get("id").toString();
+                mn.name = all_info.get("name").toString();
+                ns.put(id,mn);
             });
-            owner_list.put(name.getKey(),ns);
+            owner_list.put(name,ns);
         });
     }
 
@@ -252,7 +254,7 @@ public class SimpleLand extends PluginBase implements Listener {
         return Integer.parseInt(c.get(id).toString());
      }
 
-    public int getWorldType(Player player){
+    private int getWorldType(Player player){
         Config c = new Config(getDataFolder() + "/worldconfig.yml", Config.YAML);
         String id = player.getLevel().getFolderName();
         return Integer.parseInt(c.get(id).toString());
@@ -331,7 +333,7 @@ public class SimpleLand extends PluginBase implements Listener {
 
     private Vector3 getVacantLand(Player player){
         FoundLand land = new FoundLand();
-        land.pligun = this;
+        land.plugin = this;
         land.player = player;
         land.type = getWorldType(player);
         return land.getPos();
@@ -394,7 +396,7 @@ public class SimpleLand extends PluginBase implements Listener {
                 return info;
             }
         }
-        return null;
+        return new LandInfo();
     }
 
     public boolean isGuest(Player player, String id) {
@@ -554,7 +556,7 @@ public class SimpleLand extends PluginBase implements Listener {
                 return info;
             }
         }
-        return null;
+        return new LandInfo();
     }
 
     public LandInfo getStepLand(Player player){
@@ -602,9 +604,10 @@ public class SimpleLand extends PluginBase implements Listener {
                             sender.sendMessage(TextFormat.YELLOW + " /land myland " + TextFormat.AQUA + "我的地皮列表");
                             sender.sendMessage(TextFormat.YELLOW + " /land tp <地皮名字> " + TextFormat.AQUA + "tp到地皮名字为<地皮名字>的地皮");
                             sender.sendMessage(TextFormat.YELLOW + " /land tp <玩家> <地皮名字> " + TextFormat.AQUA + "管理员tp到<玩家>地皮名字为<地皮名字>的地皮");
-                            sender.sendMessage(TextFormat.YELLOW + " /land givland <玩家> " + TextFormat.AQUA + "把地皮给一个玩家，管理员无视权限");
+                            sender.sendMessage(TextFormat.YELLOW + " /land giveland <玩家> " + TextFormat.AQUA + "把地皮给一个玩家，管理员无视权限");
                             sender.sendMessage(TextFormat.YELLOW + " /land setname <名字> " + TextFormat.AQUA + "更改地皮名字");
                             sender.sendMessage(TextFormat.YELLOW + " /land land <玩家> " + TextFormat.AQUA + "查询此玩家的地皮");
+                            sender.sendMessage(TextFormat.YELLOW + " /land found " + TextFormat.AQUA + "自动寻找附近的空地皮，然后传送");
                             if(sender.isPlayer() && sender.isOp()) {
                                 sender.sendMessage(TextFormat.YELLOW + " /land add <名字> <1|2>" + TextFormat.AQUA + "创建一个新的地皮世界");
                             }

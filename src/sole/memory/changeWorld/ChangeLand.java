@@ -9,7 +9,8 @@ import sole.memory.generateWorld.ExpandLand;
 import java.util.HashMap;
 
 /**
- * Created by Administrator on 2017/4/6.
+ * Created by SoleMemory
+ * on 2017/4/6.
  */
 public final  class ChangeLand{
 

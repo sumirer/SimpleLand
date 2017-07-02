@@ -9,7 +9,7 @@ import sole.memory.SimpleLand;
  * on 2017/7/1.
  */
 public class FoundLand {
-    public SimpleLand pligun;
+    public SimpleLand plugin;
     public Player player;
     public int type;
 
@@ -19,7 +19,7 @@ public class FoundLand {
         for (int o = 5; true; o+=5){
             for (int _x = x-o;_x<=x+o;_x+=1){
                 for (int _z = z-o;_z<=z+o;_z+=1){
-                    if (pligun.isLandBlock(new Vector3(_x,10,_z),type)){
+                    if (plugin.isLandBlock(new Vector3(_x,10,_z),type)){
                         return new Vector3(_x+2,10,_z+2);
                     }
                 }
