@@ -304,31 +304,21 @@ public class SimpleLand extends PluginBase implements Listener {
      }
 
     public boolean isLandBlock(Vector3 vector3, int type) {
+
+            int x = vector3.getFloorX();
+            int z = vector3.getFloorZ();
+            double f;
+            double n;
         if (type == 1) {
-            int x = vector3.getFloorX();
-            int z = vector3.getFloorZ();
-
-            double f = ((double) z + 44) / 48;
-            double n = ((double) x + 44) / 48;
+             f = ((double) z + 44) / 48;
+             n = ((double) x + 44) / 48;
+        }else{
+             f = ((double) z + 60) / 64;
+             n = ((double) x + 60) / 64;
+        }
             int q = (int) n;
             int w = (int) f;
-            if (n == (double) q && (double) w == f) {
-                return true;
-            }
-        }
-        if (type == 2) {
-            int x = vector3.getFloorX();
-            int z = vector3.getFloorZ();
-
-            double f = ((double) z + 60) / 64;
-            double n = ((double) x + 60) / 64;
-            int q = (int) n;
-            int w = (int) f;
-            if (n == (double) q && (double) w == f) {
-                return true;
-            }
-        }
-        return false;
+        return n == (double) q && (double) w == f;
     }
 
     private Vector3 getVacantLand(Player player){
