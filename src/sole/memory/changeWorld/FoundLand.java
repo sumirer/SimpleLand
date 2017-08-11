@@ -20,7 +20,9 @@ public class FoundLand {
             for (int _x = x-o;_x<=x+o;_x+=1){
                 for (int _z = z-o;_z<=z+o;_z+=1){
                     if (plugin.isLandBlock(new Vector3(_x,10,_z),type)){
-                        return new Vector3(_x+2,10,_z+2);
+                        if (!plugin.isBuyLand(_x + "-" + _z+ "-" + player.getLevel().getFolderName())) {
+                            return new Vector3(_x + 2, 10, _z + 2);
+                        }
                     }
                 }
             }

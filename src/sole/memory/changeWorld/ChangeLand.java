@@ -22,13 +22,7 @@ public final  class ChangeLand{
 
 
     private HashMap<String,String> BLOCK = ExpandLand.BLOCK;
-/**
- *   Double dx1 = Double.parseDouble(landinfo.get(key).get("x1").toString());
- Double dz1 = Double.parseDouble(landinfo.get(key).get("z1").toString());
- Double dx2 = Double.parseDouble(landinfo.get(key).get("x2").toString());
- Double dz2 = Double.parseDouble(landinfo.get(key).get("z2").toString());
- if(x > dx1 && x < dx2 && z > dz1 && z < dz2){
- * */
+
  private String LAND_BLOCK = BLOCK.containsKey("地皮方块")&&BLOCK.get("地皮方块")!=null?BLOCK.get("地皮方块"):Block.GRASS+"";
 
     private int getBlockInfo(String block,boolean type){
@@ -40,20 +34,20 @@ public final  class ChangeLand{
         return 0;
     }
    public void setLandChunk() {
-       Level leve = Server.getInstance().getLevelByName(level);
+       Level levels = Server.getInstance().getLevelByName(level);
 
        for (double xs=x1+1 ; xs<x2;xs++){
            for (double zx=z1+1;zx<z2;zx++ ){
                for (int ys=0; ys < 100;ys++){
                     if( ys > 1 && ys <10){
-                        leve.setBlock(new Vector3((int)xs,ys,(int)zx), Block.get(getBlockInfo(LAND_BLOCK,true),getBlockInfo(LAND_BLOCK,false)));
+                        levels.setBlock(new Vector3((int)xs,ys,(int)zx), Block.get(getBlockInfo(LAND_BLOCK,true),getBlockInfo(LAND_BLOCK,false)));
                    }else{
-                        leve.setBlockIdAt((int)xs,ys,(int)zx, Block.AIR);
+                        levels.setBlockIdAt((int)xs,ys,(int)zx, Block.AIR);
                     }
                }
            }
        }
-       leve.saveChunks();
-       leve.save();
+       levels.saveChunks();
+       levels.save();
    }
 }
