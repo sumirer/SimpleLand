@@ -6,6 +6,7 @@ import cn.nukkit.block.Block;
 import cn.nukkit.command.Command;
 import cn.nukkit.command.CommandSender;
 import cn.nukkit.event.Listener;
+import cn.nukkit.level.Level;
 import cn.nukkit.level.generator.Generator;
 import cn.nukkit.math.Vector3;
 import cn.nukkit.plugin.PluginBase;
@@ -41,9 +42,13 @@ public class SimpleLand extends PluginBase implements Listener {
         createWorld();
     }
 
+    private static SimpleLand instance;
+    public static SimpleLand getInstance(){
+        return instance;
+    }
     @Override
     public void onEnable() {
-
+        instance = this;
         if (getDataFolder().mkdir()){
             Server.getInstance().getLogger().info("Hello SimpleLand");
         }
@@ -55,9 +60,9 @@ public class SimpleLand extends PluginBase implements Listener {
         }
         saveDefaultConfig();
         saveResource("worldblock.yml");
-        this.getServer().getLogger().info("[SimpleLand] 地皮插件加载成功");
         initData();
         WorldCheck();
+        this.getServer().getLogger().info("[SimpleLand] 地皮插件加载成功");
         Server.getInstance().getPluginManager().registerEvents(new ListenerEvent(this), this);
         Server.getInstance().getScheduler().scheduleRepeatingTask(this,new InfoTask(this),3);
         this.getServer().getLogger().info("[SimpleLand] 加载成功");
@@ -173,9 +178,9 @@ public class SimpleLand extends PluginBase implements Listener {
         Config c = new Config(getDataFolder()+ "/worldconfig.yml",Config.YAML);
         for (String landsds:c.getKeys()) {
             if (c.getInt(landsds)==1) {
-                Generator.addGenerator(Land.class, landsds, 4);
+                Generator.addGenerator(Land.class, landsds, Generator.TYPE_INFINITE);
             }else {
-                Generator.addGenerator(ExpandLand.class,landsds,4);
+                Generator.addGenerator(ExpandLand.class,landsds,Generator.TYPE_INFINITE);
             }
         }
     }
@@ -184,18 +189,18 @@ public class SimpleLand extends PluginBase implements Listener {
         Config c = new Config(getDataFolder()+ "/worldconfig.yml",Config.YAML);
         for (String landsds:c.getKeys()) {
             if (c.getInt(landsds)==1) {
-
                 if (getServer().getLevelByName(landsds) == null){
                     getServer().generateLevel(landsds,2333,Land.class);
                     getServer().loadLevel(landsds);
+                    Server.getInstance().getLogger().info("[SimpleLand] 成功加载地图"+landsds);
                 }
             }else {
                 if (getServer().getLevelByName(landsds) == null){
                     getServer().generateLevel(landsds,2333,ExpandLand.class);
                     getServer().loadLevel(landsds);
+                    Server.getInstance().getLogger().info("[SimpleLand] 成功加载地图"+landsds);
                 }
             }
-
         }
     }
 
@@ -276,31 +281,19 @@ public class SimpleLand extends PluginBase implements Listener {
      }
 
      public boolean isLandBlock(Block block, int type) {
-         if (type == 1) {
-             int x = (int) block.getX();
-             int z = (int) block.getZ();
 
-             double f = ((double) z + 44) / 48;
-             double n = ((double) x + 44) / 48;
-             int q = (int) n;
-             int w = (int) f;
-             if (n == (double) q && (double) w == f) {
-                 return true;
-             }
-         }
+         int x = (int) block.getX();
+         int z = (int) block.getZ();
+         double f = ((double) z + 44) / 48;
+         double n = ((double) x + 44) / 48;
          if (type == 2) {
-             int x = (int) block.getX();
-             int z = (int) block.getZ();
-
-             double f = ((double) z + 60) / 64;
-             double n = ((double) x + 60) / 64;
-             int q = (int) n;
-             int w = (int) f;
-             if (n == (double) q && (double) w == f) {
-                 return true;
-             }
+             f = ((double) z + 60) / 64;
+             n = ((double) x + 60) / 64;
          }
-         return false;
+         int q = (int) n;
+         int w = (int) f;
+         return n == (double) q && (double) w == f;
+
      }
 
     public boolean isLandBlock(Vector3 vector3, int type) {
@@ -389,7 +382,7 @@ public class SimpleLand extends PluginBase implements Listener {
         return new LandInfo();
     }
 
-    public boolean setLandNameCheck(Player player,String name){
+    private boolean setLandNameCheck(Player player, String name){
         for (LandInfo info:owner_list.get(player.getName().toLowerCase()).values()) {
             if (info.getName().equals(name)){
                 return false;
@@ -451,7 +444,7 @@ public class SimpleLand extends PluginBase implements Listener {
         }
         int i=1;
         for (Map.Entry key:owner_list.get(player.getName().toLowerCase()).entrySet()) {
-            player.sendMessage(TextFormat.GOLD+"-"+i+":  "+((LandInfo)key.getValue()).getName());
+            player.sendMessage(TextFormat.GOLD+">>"+i+":  "+((LandInfo)key.getValue()).getName());
             i+=1;
         }
 
@@ -498,6 +491,7 @@ public class SimpleLand extends PluginBase implements Listener {
         for (Map.Entry m:guest_list.get(player.toLowerCase()).entrySet()) {
             if (((GuestInfo)m.getValue()).getOwer().equals(owner.getName().toLowerCase())&&((GuestInfo)m.getValue()).getId().equals(id)){
                 guest_list.get(player.toLowerCase()).remove(id);
+                saveLandData();
                 return;
             }
         }
@@ -587,6 +581,7 @@ public class SimpleLand extends PluginBase implements Listener {
         }
         return false;
     }
+    @Override
     @SuppressWarnings("unchecked")
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args){
 
@@ -595,6 +590,21 @@ public class SimpleLand extends PluginBase implements Listener {
             case "land":
                 if(args.length > 0){
                     switch (args[0]) {
+                        case "w":
+                            if (args.length<2){
+                                sender.sendMessage(TextFormat.RED+"请输入要到达的世界");
+                                return true;
+                            }
+                            Level level = Server.getInstance().getLevelByName(args[1]);
+                            if (level==null){
+                                sender.sendMessage(TextFormat.RED+"请输入已经加载的世界名字");
+                                return true;
+                            }
+                            if (sender instanceof Player){
+                                ((Player) sender).teleport(level.getSpawnLocation());
+                                sender.sendMessage(TextFormat.RED+"传送成功");
+                            }
+                            break;
                         case "help":
                             sender.sendMessage(TextFormat.AQUA + ">==========[ SimpleLand ]==========<");
                             sender.sendMessage(TextFormat.YELLOW + " /land admin <add|del> " + TextFormat.AQUA + "后台添加地皮的管理员，无视权限");
@@ -763,6 +773,7 @@ public class SimpleLand extends PluginBase implements Listener {
                                     if (isOwner(player)) {
                                         if (setLandNameCheck((Player) sender,args[1])) {
                                             setLandName(player, getLand(player).getId(), args[1]);
+                                            saveLandData();
                                             sender.sendMessage(TextFormat.AQUA + "[SimpleLand] 成功设置此地皮的名字为 " + args[1]);
                                         }else {
                                             sender.sendMessage(TextFormat.AQUA + "[SimpleLand] 检测到你有一块名字为"+args[1]+"的地皮，请更改名字");

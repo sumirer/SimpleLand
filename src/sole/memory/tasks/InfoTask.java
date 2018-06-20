@@ -25,10 +25,13 @@ public class InfoTask extends AsyncTask {
             LandInfo info = land.getStepLand(player);
             if (land.isLandWord(player.getLevel().getFolderName())) {
                 if (info.getId()==null){
-                if (player.isOp()){
-                    can = "最高操作权限";
+                if (SimpleLand.getInstance().isAdmin(player.getName().toLowerCase())){
+                    can = "管理员权限";
                 }
-                player.sendTip(TextFormat.AQUA+"                                                                      >> 名字: 无地皮" +"\n                                                                      >> ID: 无地皮"+ "\n                                                                      >> 主人: 无" +"\n                                                                      >> 操作权限: "+can+"\n \n \n \n \n \n \n \n \n\n");
+                player.sendTip(TextFormat.AQUA+"                                                                        >> 名字: 无地皮"
+                                              +"\n                                                                           >> ID: 无地皮"
+                                              +"\n                                                                      >> 主人: 无"
+                                              +"\n                                                                          >> 操作权限: "+TextFormat.RED+can+"\n \n \n \n \n \n \n \n \n\n");
                 return;
             }
                 if (land.isOwner(player,info.getId())){
@@ -37,10 +40,13 @@ public class InfoTask extends AsyncTask {
                 if (land.isGuest(player,info.getId())){
                     can = "访客";
                 }
-                if (player.isOp()){
-                    can = "最高操作权限";
+                if (SimpleLand.getInstance().isAdmin(player.getName().toLowerCase())){
+                    can = "管理员权限";
                 }
-                player.sendTip(TextFormat.AQUA+"                                                                      >> 名字: " + info.getName() + TextFormat.GOLD+"\n                                                                      >> ID: " + info.getId() +TextFormat.GOLD+ "\n                                                                      >> 主人: " + info.getOwner()+"\n                                                                      >> 操作权限: "+can+"\n \n \n \n \n \n \n \n \n\n");
+                            player.sendTip(TextFormat.AQUA+"                                                                        >> 名字: " + info.getName()
+                                         + TextFormat.GOLD+"\n                                                                           >> ID: " + info.getId()
+                                          +TextFormat.GOLD+"\n                                                                      >> 主人: " + info.getOwner()
+                                                          +"\n                                                                         >> 操作权限: "+TextFormat.GREEN +can+"\n \n \n \n \n \n \n \n \n\n");
             }
         }
     }

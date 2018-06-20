@@ -1,6 +1,6 @@
 ﻿name: SimpleLand
 main: sole.memory.SimpleLand
-version: "1.0.0"
+version: "2.0.8"
 api: 1.0.0
 load: POSTWORLD
 author: "SoleMemory"

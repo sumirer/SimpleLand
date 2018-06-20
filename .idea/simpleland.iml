@@ -10,8 +10,7 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" exported="" name="nukkit" level="project" />
-    <orderEntry type="library" name="SCrafting" level="project" />
-    <orderEntry type="library" name="Money 2.0.7" level="project" />
+    <orderEntry type="library" name="Money-2.2.0" level="project" />
+    <orderEntry type="library" name="nukkitx" level="project" />
   </component>
 </module>

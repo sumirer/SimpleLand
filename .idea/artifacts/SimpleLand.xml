@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="SimpleLand">
+    <output-path>$USER_HOME$/Desktop/nukkitX/plugins</output-path>
+    <root id="archive" name="SimpleLand.jar">
+      <element id="module-output" name="simpleland" />
+    </root>
+  </artifact>
+</component>
